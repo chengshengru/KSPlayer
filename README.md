@@ -30,18 +30,19 @@ Differences between GPL version and LGPL version.
 
 - Video upscaling
 - ProgressBar Preview
+- AVPlayer supports MKV
+- Height Channel Layout
+- Native Dolby Atmos (E-AC-3)
 - Precache data to Hard Drive
 - Video output to another screen
 - Video switching with zero delay
 - Audio Passthrough Output by Wi-Fi
 - Live streaming supports rewind viewing
 - Offline AI real-time subtitle generation
+- Native Dolby Vision dynamic metadata (P5, P7， P8)
 - Simultaneous playback of separate audio and video URLs
 - Blu-ray disc (ISO, BDMV, DVD) playback on all Apple platforms
 - Play videos in a small window in the App (resumable, supports iOS and tvOS)
-- AVPlayer supports MKV
-- Native Dolby Atmos (E-AC-3)
-- Native Dolby Vision dynamic metadata (P5, P8)
 
 To experience the paid features, you can download the app from the App Store. [App Store Link](https://apps.apple.com/app/tracyplayer/id6450770064) [Test Flight Link](https://testflight.apple.com/join/eNmYbmZN)
 
@@ -97,6 +98,7 @@ This table does not list all licensed apps. If you would like to have your app l
 |[Interlace Player](https://apps.apple.com/app/id6789244498)||
 |[IPTV +](https://apps.apple.com/app/iptv-my-smart-iptv-player/id1525121231)||
 |[LillyPlayer Video Player](https://apps.apple.com/app/lillyplayer-video-player/id1446967273)||
+|[Mert Stream TV](https://apps.apple.com/us/app/mert-stream-tv/id6813154865?l)||
 |[MyKroko](https://apps.apple.com/cn/app/mykroko/id6758295863)||
 |[SeeTV]()||
 |[SenPlayer](https://apps.apple.com/app/senplayer-hdr-media-player/id6443975850)||

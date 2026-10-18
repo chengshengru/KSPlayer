@@ -35,8 +35,8 @@ let package = Package(
         .target(
             name: "MPVPlayer",
             dependencies: [
-                "KSPlayer",
                 .product(name: "libmpv", package: "FFmpegKit"),
+                "KSPlayer",
             ],
             swiftSettings: [
                 .unsafeFlags([
@@ -47,8 +47,8 @@ let package = Package(
         .target(
             name: "KSPlayerUI",
             dependencies: [
-                "KSPlayer",
                 "FFmpegKit",
+                "KSPlayer",
             ],
             resources: [
                 .process("Localizable.xcstrings"),
