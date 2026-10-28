@@ -552,4 +552,49 @@ git diff -U0 | grep '^[+-]' | grep -vE '^(\+\+\+|---)' | grep -vE '#if|#endif|#e
 
 ---
 
-*本方案仅为设计文档,未改动任何代码。实施时按 §8 里程碑顺序执行,每步以 §6 门禁为验收标准。*
+## 12. Xcode 14 集成链路实测结论(2026-10-28)
+
+### 12.1 结论
+
+本仓库在 Xcode 14 下**已能正常打开**(第 12.3 节已完成 Demo 工程降级),源码层(M3–M5)亦已迁移完毕;但**"编译通过"在当前仓库范围内不可达成**,阻塞点不在源码,而在核心二进制 `KSPlayer.xcframework`,且该二进制无法由本仓库用 Xcode 14 重新产出。
+
+### 12.2 实测证据
+
+| 证据 | 实测结果 | 对 Xcode 14 的影响 |
+|---|---|---|
+| xcframework 接口头部 | `Apple Swift version 6.3.3`、`-swift-version 6`、`-package-name ksplayer` | 5.7.2 编译器无法加载该模块 |
+| 接口 import 列表 | 含 `Translation`、`_Translation_SwiftUI`(Xcode 15.3+/iOS 17.4 SDK 起提供) | Xcode 14 的 iOS 16.x SDK 中不存在该模块,即使改写 interface 文本也无法加载 |
+| `package` 访问级符号 | 1 处:`package func translationView(subtitleModel:)` | 5.7 无 `package` 访问级(E7) |
+| 核心源码位置 | 本仓库与上游 `kingslay/KSPlayer` main(commit `7d6b4ce`)均只含 `Sources/KSPlayer.xcframework`;README 声明 GPL 版核心为 Dynamic Binary,核心源码仅 LGPL 版提供 | M2(重编)必须在持有核心源码的构建环境执行,本仓库无法完成 |
+| FFmpegKit manifest 矩阵 | `6.0.0`=tools-version **5.7**(无 visionOS);`6.1.x`=**5.9**;`9.0.2`=**6.1**(含 `.visionOS`) | Xcode 14 只能解析 6.0.0;若必须用 9.0.2,需改走本地 path 依赖并仅降级其 manifest(不动二进制) |
+
+### 12.3 Demo 工程 Xcode 14 兼容改造(已完成)
+
+| 改动 | 原因 |
+|---|---|
+| `objectVersion` 70 → 56 | 70 为 Xcode 16 工程格式,Xcode 14 拒绝打开 |
+| 删除 `PBXFileSystemSynchronizedRootGroup` 与 `PBXFileSystemSynchronizedBuildFileExceptionSet` | 同步根组为 Xcode 16 专属;改为普通 `PBXGroup` + 显式 `PBXFileReference`/`PBXBuildFile`,并将 `SwiftUIView.swift` 正式加入 `SimplePlayer` 的 Sources(原配置下该 target 源文件为空,无法构建) |
+| `SimplePlayer` 补 `PRODUCT_BUNDLE_IDENTIFIER = com.kintan.simpleplayer` | 原配置缺失 Bundle ID,无法构建 |
+| `SUPPORTED_PLATFORMS` 去掉 `xros xrsimulator`,删除 `SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD` | Xcode 14 无 visionOS SDK/平台标识 |
+| 本地包 `relativePath` `../../../KSPlayer` → `../..` | 原路径依赖"仓库目录名为 KSPlayer 且位于固定层级";改为相对工程目录解析,任意检出位置均有效 |
+
+校验:`xcodeproj` 1.28.1 解析通过,`objectVersion=56`,两个 target 的 Sources/Resources/Package 依赖均正确,同步组对象数为 0。
+
+### 12.4 要在 Xcode 14 真正编译通过,还差三件事
+
+```mermaid
+flowchart LR
+    A["① 核心 KSPlayer 源码<br/>(LGPL 版 / 核心构建仓库)"] --> B["用 Xcode 14.2 + Swift 5.7<br/>重编 xcframework(补 iOS 真机 slice)<br/>translationView: package → public"]
+    C["② FFmpegKit 依赖<br/>锁 6.0.0 或本地 path + manifest 降级"] --> D
+    B --> D["③ macOS 实机验证<br/>§10 构建命令 + §6.1 ABI diff"]
+    D --> E["Xcode 14 编译通过"]
+```
+
+1. **核心源码重编**(M2,外部):须由持有核心源码的环境执行,产物为 Swift 5.7 编译、含 `ios-arm64` 真机切片的 xcframework;
+2. **FFmpegKit 版本**:改用 `6.0.0` tag,或保留 `9.0.2` 但以本地 path 依赖并把其 manifest 的 `swift-tools-version` 降到 5.7(移除 `.visionOS`);
+3. **实机验证**:§10 的双工具链构建与 §6.1 符号级 ABI diff 必须在 macOS + Xcode 环境中执行。
+
+---
+
+*本文档为设计与实施记录;第 11、12 节为实际实施结果。*
+

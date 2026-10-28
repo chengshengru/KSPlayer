@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 70;
+	objectVersion = 56;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -25,6 +25,7 @@
 		ACDEF402307752300048F326 /* KSPlayerUI in Frameworks */ = {isa = PBXBuildFile; productRef = ACDEF401307752300048F326 /* KSPlayerUI */; };
 		ACDEF404307752300048F326 /* MPVPlayer in Frameworks */ = {isa = PBXBuildFile; productRef = ACDEF403307752300048F326 /* MPVPlayer */; };
 		ACEA9FEB298BFC8800FBA74B /* MovieModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACEA9FEA298BFC8800FBA74B /* MovieModel.swift */; };
+		AC168CC72E2B61440059B080 /* SwiftUIView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC168CC62E2B61440059B080 /* SwiftUIView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -45,21 +46,8 @@
 		ACD786482A6A8648004A0220 /* Defaults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Defaults.swift; sourceTree = "<group>"; };
 		ACE3619328EB689F00F234EB /* Player-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Player-Info.plist"; sourceTree = "<group>"; };
 		ACEA9FEA298BFC8800FBA74B /* MovieModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MovieModel.swift; sourceTree = "<group>"; };
+		AC168CC62E2B61440059B080 /* SwiftUIView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
-
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		AC168CC82E2B617A0059B080 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				SwiftUIView.swift,
-			);
-			target = 8004D9232C464F8D001936E9 /* SimplePlayer */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
-/* Begin PBXFileSystemSynchronizedRootGroup section */
-		AC168CC52E2B61440059B080 /* APP2 */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (AC168CC82E2B617A0059B080 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = APP2; sourceTree = "<group>"; };
-/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		8004D9322C464F8D001936E9 /* Frameworks */ = {
@@ -83,6 +71,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		AC168CC52E2B61440059B080 /* APP2 */ = {
+			isa = PBXGroup;
+			children = (
+				AC168CC62E2B61440059B080 /* SwiftUIView.swift */,
+			);
+			path = APP2;
+			sourceTree = "<group>";
+		};
 		8004D9202C464899001936E9 /* Immersive */ = {
 			isa = PBXGroup;
 			children = (
@@ -213,7 +209,7 @@
 			);
 			mainGroup = AC77DFAA26402327001351AE;
 			packageReferences = (
-				AC67EBA030767CC200642B68 /* XCLocalSwiftPackageReference "../../../KSPlayer" */,
+				AC67EBA030767CC200642B68 /* XCLocalSwiftPackageReference "../.." */,
 			);
 			productRefGroup = AC77DFB826402329001351AE /* Products */;
 			projectDirPath = "";
@@ -249,6 +245,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AC168CC72E2B61440059B080 /* SwiftUIView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -305,13 +302,13 @@
 				);
 				MARKETING_VERSION = 2.1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.kintan.player;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kintan.simpleplayer;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				"PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]" = "";
-				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx xros xrsimulator";
+				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx";
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
-				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,3,6,7";
@@ -349,13 +346,13 @@
 				);
 				MARKETING_VERSION = 2.1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.kintan.player;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kintan.simpleplayer;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				"PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]" = "";
-				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx xros xrsimulator";
+				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx";
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
-				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,3,6,7";
 				VALIDATE_PRODUCT = YES;
@@ -528,10 +525,9 @@
 				PRODUCT_NAME = Player;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				"PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]" = "";
-				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx xros xrsimulator";
+				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx";
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
-				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,3,6,7";
 			};
@@ -570,10 +566,9 @@
 				PRODUCT_NAME = Player;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				"PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]" = "";
-				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx xros xrsimulator";
+				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx";
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
-				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,3,6,7";
 				VALIDATE_PRODUCT = YES;
@@ -613,31 +608,31 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		AC67EBA030767CC200642B68 /* XCLocalSwiftPackageReference "../../../KSPlayer" */ = {
+		AC67EBA030767CC200642B68 /* XCLocalSwiftPackageReference "../.." */ = {
 			isa = XCLocalSwiftPackageReference;
-			relativePath = ../../../KSPlayer;
+			relativePath = ../..;
 		};
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
 		AC67EBD53076B04300642B68 /* KSPlayerUI */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = AC67EBA030767CC200642B68 /* XCLocalSwiftPackageReference "../../../KSPlayer" */;
+			package = AC67EBA030767CC200642B68 /* XCLocalSwiftPackageReference "../.." */;
 			productName = KSPlayerUI;
 		};
 		AC67EBD73076B04400642B68 /* MPVPlayer */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = AC67EBA030767CC200642B68 /* XCLocalSwiftPackageReference "../../../KSPlayer" */;
+			package = AC67EBA030767CC200642B68 /* XCLocalSwiftPackageReference "../.." */;
 			productName = MPVPlayer;
 		};
 		ACDEF401307752300048F326 /* KSPlayerUI */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = AC67EBA030767CC200642B68 /* XCLocalSwiftPackageReference "../../../KSPlayer" */;
+			package = AC67EBA030767CC200642B68 /* XCLocalSwiftPackageReference "../.." */;
 			productName = KSPlayerUI;
 		};
 		ACDEF403307752300048F326 /* MPVPlayer */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = AC67EBA030767CC200642B68 /* XCLocalSwiftPackageReference "../../../KSPlayer" */;
+			package = AC67EBA030767CC200642B68 /* XCLocalSwiftPackageReference "../.." */;
 			productName = MPVPlayer;
 		};
 /* End XCSwiftPackageProductDependency section */
