@@ -1,0 +1,67 @@
+diff --git a/Package.swift b/Package.swift
+index 955f178..097b246 100644
+--- a/Package.swift
++++ b/Package.swift
+@@ -1,10 +1,10 @@
+-// swift-tools-version:6.1
++// swift-tools-version:5.7
+ import PackageDescription
+ 
+ let package = Package(
+     name: "FFmpegKit",
+     defaultLocalization: "en",
+-    platforms: [.iOS(.v13), .macCatalyst(.v14), .macOS(.v10_15), .tvOS(.v13), .visionOS(.v1), .watchOS(.v6)],
++    platforms: [.iOS(.v13), .macCatalyst(.v14), .macOS(.v10_15), .tvOS(.v13), .watchOS(.v6)],
+     products: [
+         .library(
+             name: "FFmpegKit",
+@@ -40,16 +40,16 @@ let package = Package(
+                 "lcms2", "libass", "libdav1d", "libharfbuzz", "libfontconfig", "libfreetype", "libfribidi", "libopus", "libsrt", "libzvbi",
+                 "libcrypto", "libssl",
+ //                "gmp", "nettle", "hogweed", "gnutls",
+-                .targetItem(name: "libdovi", condition: .when(platforms: [.iOS, .macCatalyst, .macOS, .tvOS, .visionOS])),
+-                .targetItem(name: "libplacebo", condition: .when(platforms: [.iOS, .macCatalyst, .macOS, .tvOS, .visionOS])),
+-                .targetItem(name: "MoltenVK", condition: .when(platforms: [.iOS, .macCatalyst, .macOS, .tvOS, .visionOS])),
++                .targetItem(name: "libdovi", condition: .when(platforms: [.iOS, .macCatalyst, .macOS, .tvOS])),
++                .targetItem(name: "libplacebo", condition: .when(platforms: [.iOS, .macCatalyst, .macOS, .tvOS])),
++                .targetItem(name: "MoltenVK", condition: .when(platforms: [.iOS, .macCatalyst, .macOS, .tvOS])),
+             ],
+             resources: [.process("Resources")],
+             cSettings: [
+                 .headerSearchPath("private"),
+             ],
+             linkerSettings: [
+-                .linkedFramework("AudioToolbox", .when(platforms: [.iOS, .macCatalyst, .macOS, .tvOS, .visionOS])),
++                .linkedFramework("AudioToolbox", .when(platforms: [.iOS, .macCatalyst, .macOS, .tvOS])),
+                 .linkedFramework("AVFAudio"),
+                 .linkedFramework("AVFoundation"),
+                 .linkedFramework("CoreAudio"),
+@@ -60,13 +60,13 @@ let package = Package(
+                 .linkedFramework("Cocoa", .when(platforms: [.macOS])),
+                 .linkedFramework("DiskArbitration", .when(platforms: [.macOS])),
+                 .linkedFramework("Foundation"),
+-                .linkedFramework("Metal", .when(platforms: [.iOS, .macCatalyst, .macOS, .tvOS, .visionOS])),
+-                .linkedFramework("IOKit", .when(platforms: [.iOS, .macCatalyst, .macOS, .visionOS])),
+-                .linkedFramework("IOSurface", .when(platforms: [.iOS, .macCatalyst, .macOS, .tvOS, .visionOS])),
++                .linkedFramework("Metal", .when(platforms: [.iOS, .macCatalyst, .macOS, .tvOS])),
++                .linkedFramework("IOKit", .when(platforms: [.iOS, .macCatalyst, .macOS])),
++                .linkedFramework("IOSurface", .when(platforms: [.iOS, .macCatalyst, .macOS, .tvOS])),
+                 .linkedFramework("QuartzCore"),
+                 .linkedFramework("Security"),
+-                .linkedFramework("UIKit", .when(platforms: [.iOS, .macCatalyst, .tvOS, .visionOS, .watchOS])),
+-                .linkedFramework("VideoToolbox", .when(platforms: [.iOS, .macCatalyst, .macOS, .tvOS, .visionOS])),
++                .linkedFramework("UIKit", .when(platforms: [.iOS, .macCatalyst, .tvOS, .watchOS])),
++                .linkedFramework("VideoToolbox", .when(platforms: [.iOS, .macCatalyst, .macOS, .tvOS])),
+                 .linkedLibrary("bz2"),
+                 .linkedLibrary("c++"),
+                 // freetype 需要用到expat，所以全平台都要引入expat。iOS13 dyld: Library not loaded: /usr/lib/libexpat.1.dylib。所以计划iOS13就不支持了
+@@ -171,9 +171,5 @@ let package = Package(
+             path: "Sources/libcrypto.xcframework"
+         ),
+     ],
+-    swiftLanguageModes: [
+-        .v5,
+-        .v6,
+-    ],
+     cLanguageStandard: .c11
+ )

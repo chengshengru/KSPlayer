@@ -566,7 +566,7 @@ git diff -U0 | grep '^[+-]' | grep -vE '^(\+\+\+|---)' | grep -vE '#if|#endif|#e
 | 接口 import 列表 | 含 `Translation`、`_Translation_SwiftUI`(Xcode 15.3+/iOS 17.4 SDK 起提供) | Xcode 14 的 iOS 16.x SDK 中不存在该模块,即使改写 interface 文本也无法加载 |
 | `package` 访问级符号 | 1 处:`package func translationView(subtitleModel:)` | 5.7 无 `package` 访问级(E7) |
 | 核心源码位置 | 本仓库与上游 `kingslay/KSPlayer` main(commit `7d6b4ce`)均只含 `Sources/KSPlayer.xcframework`;README 声明 GPL 版核心为 Dynamic Binary,核心源码仅 LGPL 版提供 | M2(重编)必须在持有核心源码的构建环境执行,本仓库无法完成 |
-| FFmpegKit manifest 矩阵 | `6.0.0`=tools-version **5.7**(无 visionOS);`6.1.x`=**5.9**;`9.0.2`=**6.1**(含 `.visionOS`) | Xcode 14 只能解析 6.0.0;若必须用 9.0.2,需改走本地 path 依赖并仅降级其 manifest(不动二进制) |
+| FFmpegKit manifest 矩阵 | `6.0.0`=tools-version **5.7**(无 visionOS);`6.1.x`=**5.9**;`9.0.2`=**6.1**(含 `.visionOS`) | Xcode 14 无法直接解析 `9.0.2`,需本地 path + manifest 降级(§12.5);`6.0.0` 虽可解析,但产物缺 `libmpv`/`libass`/`libzvbi`,不可替代 |
 
 ### 12.3 Demo 工程 Xcode 14 兼容改造(已完成)
 
@@ -585,14 +585,36 @@ git diff -U0 | grep '^[+-]' | grep -vE '^(\+\+\+|---)' | grep -vE '#if|#endif|#e
 ```mermaid
 flowchart LR
     A["① 核心 KSPlayer 源码<br/>(LGPL 版 / 核心构建仓库)"] --> B["用 Xcode 14.2 + Swift 5.7<br/>重编 xcframework(补 iOS 真机 slice)<br/>translationView: package → public"]
-    C["② FFmpegKit 依赖<br/>锁 6.0.0 或本地 path + manifest 降级"] --> D
+    C["② FFmpegKit 9.0.2<br/>本地 path + manifest 降级(已完成)"] --> D
     B --> D["③ macOS 实机验证<br/>§10 构建命令 + §6.1 ABI diff"]
     D --> E["Xcode 14 编译通过"]
 ```
 
 1. **核心源码重编**(M2,外部):须由持有核心源码的环境执行,产物为 Swift 5.7 编译、含 `ios-arm64` 真机切片的 xcframework;
-2. **FFmpegKit 版本**:改用 `6.0.0` tag,或保留 `9.0.2` 但以本地 path 依赖并把其 manifest 的 `swift-tools-version` 降到 5.7(移除 `.visionOS`);
+2. **FFmpegKit**:保留 `9.0.2` 并以本地 path 依赖 + manifest 降级(见 §12.5,已完成);
 3. **实机验证**:§10 的双工具链构建与 §6.1 符号级 ABI diff 必须在 macOS + Xcode 环境中执行。
+
+### 12.5 FFmpegKit 源码定位与 Swift 5.7 移植(已完成)
+
+| 项 | 结论 |
+|---|---|
+| 源码位置 | `https://github.com/kingslay/FFmpegKit`,tag `9.0.2`(commit `20e3ba2`),即主包 `.package(url:..., from: "9.0.2")` 的实际来源 |
+| 代码构成 | 仓库内**唯一的 Swift 文件就是 `Package.swift`**;`Sources/FFmpegKit` 为 C 源码(`ffmpegkit.c`、`renderer.c`)+ 头文件,其余 25 个 `*.xcframework` 是预编译二进制 |
+| 移植性质 | 没有语言级 Swift 代码,所谓"移植"= **manifest 降级**,二进制与运行行为完全不变 |
+| 不可兼容点 | `swift-tools-version:6.1`(需 Xcode 16.3+)、`platforms` 中 `.visionOS(.v1)`、`swiftLanguageModes`(6.0 API),另有 8 处 `.when(platforms: [... .visionOS ...])` |
+| 补丁 | [FFmpegKit-9.0.2-Swift5.7.patch](FFmpegKit-9.0.2-Swift5.7.patch),11 增 15 删,仅改 manifest |
+| 落地方式 | 主包 [Package.swift](file:///workspace/Package.swift#L93-L111) 已支持同级 `../FFmpegKit` 本地 path;将 9.0.2 克隆到仓库同级目录并打补丁即可。Xcode 15+/26 侧仍可继续走远程 9.0.2,两条路径互不影响 |
+
+**为什么不改用 `6.0.0`**:`6.0.0` 是"从源码构建 FFmpeg"的另一套包,产物只有 `Libav*` 与 `ffmpeg`/`ffplay`/`ffprobe`,**没有 `libmpv`、`libass`、`libzvbi`**;而 `MPVPlayer` 直接 `import libmpv`,故 `6.0.0` 不可替换,先前"锁 6.0.0"的方案作废。
+
+**visionOS 影响**:9.0.2 的二进制本身含 `xros` 切片,但主包已按 E2 移除 visionOS 平台,故 manifest 去掉 `.visionOS` 不影响现有 iOS/macOS/tvOS 目标;若将来恢复 visionOS,需回到 6.1+ 工具链并使用未打补丁的远程依赖。
+
+**验证(已通过)**:补丁后的 FFmpegKit manifest 与主包 manifest 在 **Swift 5.7.3** 与 **Swift 6.2.4** 下 `swift package dump-package` 均 `exit=0`;主包依赖解析结果为 `fileSystem(path: /FFmpegKit)`,证实本地 path 探测逻辑命中(见 §12.6)。
+
+### 12.6 附:本仓库外的依赖改动
+
+- 补丁作用于**仓库同级目录** `../FFmpegKit`,不进入本仓库版本库,故不会影响 CI 与高版本方工具链;
+- 该目录同时被主包"本地 path 探测"逻辑命中,本地开发时无需再解析远程 9.0.2。
 
 ---
 
