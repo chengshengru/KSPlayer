@@ -199,7 +199,7 @@
 				};
 			};
 			buildConfigurationList = AC77DFAE26402327001351AE /* Build configuration list for PBXProject "Player" */;
-			compatibilityVersion = "Xcode 9.3";
+			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -301,7 +301,6 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 2.1.2;
-				PRODUCT_BUNDLE_IDENTIFIER = com.kintan.player;
 				PRODUCT_BUNDLE_IDENTIFIER = com.kintan.simpleplayer;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -345,7 +344,6 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 2.1.2;
-				PRODUCT_BUNDLE_IDENTIFIER = com.kintan.player;
 				PRODUCT_BUNDLE_IDENTIFIER = com.kintan.simpleplayer;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
