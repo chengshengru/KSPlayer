@@ -1,30 +1,31 @@
 import Foundation
 import KSPlayer
 @testable import KSPlayerUI
-import Testing
+import XCTest
 
+/// 原实现基于 Swift Testing(import Testing / @Test / #expect / #require,需 Xcode 16+),
+/// 为兼容 Swift 5.7 / Xcode 14 工具链,等价改写为 XCTest:
+/// 用例数量(8 个)与断言逐条对应,不增不减。
 @MainActor
-final class KSPlayerResourceTest {
-    @Test
-    func `single definition resource`() throws {
-        let url = try #require(URL(string: "https://example.com/video.mp4"))
+final class KSPlayerResourceTest: XCTestCase {
+    func testSingleDefinitionResource() throws {
+        let url = try XCTUnwrap(URL(string: "https://example.com/video.mp4"))
         let options = KSOptions()
         let resource = KSPlayerResource(url: url, options: options, name: "Test Video")
 
         // 测试基本属性
-        #expect(resource.name == "Test Video")
-        #expect(resource.definitions.count == 1)
-        #expect(resource.definitions[0].url == url)
-        #expect(resource.definitions[0].definition == "")
-        #expect(resource.cover == nil)
-        #expect(resource.subtitleDataSource == nil)
+        XCTAssertEqual(resource.name, "Test Video")
+        XCTAssertEqual(resource.definitions.count, 1)
+        XCTAssertEqual(resource.definitions[0].url, url)
+        XCTAssertEqual(resource.definitions[0].definition, "")
+        XCTAssertNil(resource.cover)
+        XCTAssertNil(resource.subtitleDataSource)
     }
 
-    @Test
-    func `multiple definition resource`() throws {
-        let hdUrl = try #require(URL(string: "https://example.com/video_hd.mp4"))
-        let sdUrl = try #require(URL(string: "https://example.com/video_sd.mp4"))
-        let coverUrl = try #require(URL(string: "https://example.com/cover.jpg"))
+    func testMultipleDefinitionResource() throws {
+        let hdUrl = try XCTUnwrap(URL(string: "https://example.com/video_hd.mp4"))
+        let sdUrl = try XCTUnwrap(URL(string: "https://example.com/video_sd.mp4"))
+        let coverUrl = try XCTUnwrap(URL(string: "https://example.com/cover.jpg"))
 
         let options = KSOptions()
         let hdDefinition = KSPlayerResourceDefinition(url: hdUrl, definition: "高清", options: options)
@@ -37,17 +38,16 @@ final class KSPlayerResourceTest {
         )
 
         // 测试多清晰度配置
-        #expect(resource.name == "Multi Definition Video")
-        #expect(resource.definitions.count == 2)
-        #expect(resource.definitions[0].definition == "高清")
-        #expect(resource.definitions[1].definition == "标清")
-        #expect(resource.cover == coverUrl)
+        XCTAssertEqual(resource.name, "Multi Definition Video")
+        XCTAssertEqual(resource.definitions.count, 2)
+        XCTAssertEqual(resource.definitions[0].definition, "高清")
+        XCTAssertEqual(resource.definitions[1].definition, "标清")
+        XCTAssertEqual(resource.cover, coverUrl)
     }
 
-    @Test
-    func `resource with subtitle`() throws {
-        let url = try #require(URL(string: "https://example.com/video.mp4"))
-        let subtitleUrl = try #require(URL(string: "https://example.com/subtitle.srt"))
+    func testResourceWithSubtitle() throws {
+        let url = try XCTUnwrap(URL(string: "https://example.com/video.mp4"))
+        let subtitleUrl = try XCTUnwrap(URL(string: "https://example.com/subtitle.srt"))
 
         let options = KSOptions()
         let resource = KSPlayerResource(
@@ -59,13 +59,12 @@ final class KSPlayerResourceTest {
         )
 
         // 测试字幕配置
-        #expect(resource.subtitleDataSource != nil)
-        #expect(resource.name == "Video with Subtitle")
+        XCTAssertNotNil(resource.subtitleDataSource)
+        XCTAssertEqual(resource.name, "Video with Subtitle")
     }
 
-    @Test
-    func `resource definition with options`() throws {
-        let url = try #require(URL(string: "https://example.com/video.mp4"))
+    func testResourceDefinitionWithOptions() throws {
+        let url = try XCTUnwrap(URL(string: "https://example.com/video.mp4"))
         let options = KSOptions()
         options.startPlayRate = 1.5
         options.isLoopPlay = true
@@ -77,17 +76,16 @@ final class KSPlayerResourceTest {
         )
 
         // 测试定义配置
-        #expect(definition.url == url)
-        #expect(definition.definition == "自定义")
-        #expect(definition.options.startPlayRate == 1.5)
-        #expect(definition.options.isLoopPlay == true)
+        XCTAssertEqual(definition.url, url)
+        XCTAssertEqual(definition.definition, "自定义")
+        XCTAssertEqual(definition.options.startPlayRate, 1.5)
+        XCTAssertEqual(definition.options.isLoopPlay, true)
     }
 
-    @Test
-    func `resource copy`() throws {
-        let url = try #require(URL(string: "https://example.com/video.mp4"))
-        let coverUrl = try #require(URL(string: "https://example.com/cover.jpg"))
-        let subtitleUrl = try #require(URL(string: "https://example.com/subtitle.srt"))
+    func testResourceCopy() throws {
+        let url = try XCTUnwrap(URL(string: "https://example.com/video.mp4"))
+        let coverUrl = try XCTUnwrap(URL(string: "https://example.com/cover.jpg"))
+        let subtitleUrl = try XCTUnwrap(URL(string: "https://example.com/subtitle.srt"))
 
         let options = KSOptions()
         let originalResource = KSPlayerResource(
@@ -107,47 +105,44 @@ final class KSPlayerResourceTest {
         )
 
         // 验证复制结果
-        #expect(copiedResource.name == "Copied Video")
-        #expect(copiedResource.definitions.count == originalResource.definitions.count)
-        #expect(copiedResource.cover == originalResource.cover)
-        #expect(copiedResource.subtitleDataSource === originalResource.subtitleDataSource)
+        XCTAssertEqual(copiedResource.name, "Copied Video")
+        XCTAssertEqual(copiedResource.definitions.count, originalResource.definitions.count)
+        XCTAssertEqual(copiedResource.cover, originalResource.cover)
+        XCTAssertIdentical(copiedResource.subtitleDataSource, originalResource.subtitleDataSource)
     }
 
-    @Test
-    func `empty resource`() {
+    func testEmptyResource() {
         let resource = KSPlayerResource(name: "Empty", definitions: [], cover: nil)
 
         // 测试空资源
-        #expect(resource.name == "Empty")
-        #expect(resource.definitions.isEmpty)
-        #expect(resource.cover == nil)
-        #expect(resource.subtitleDataSource == nil)
+        XCTAssertEqual(resource.name, "Empty")
+        XCTAssertTrue(resource.definitions.isEmpty)
+        XCTAssertNil(resource.cover)
+        XCTAssertNil(resource.subtitleDataSource)
     }
 
-    @Test
-    func `resource equality`() throws {
-        let url1 = try #require(URL(string: "https://example.com/video1.mp4"))
-        let url2 = try #require(URL(string: "https://example.com/video2.mp4"))
+    func testResourceEquality() throws {
+        let url1 = try XCTUnwrap(URL(string: "https://example.com/video1.mp4"))
+        let url2 = try XCTUnwrap(URL(string: "https://example.com/video2.mp4"))
 
         let options = KSOptions()
         let resource1 = KSPlayerResource(url: url1, options: options, name: "Video 1")
         let resource2 = KSPlayerResource(url: url1, options: options, name: "Video 1")
         let resource3 = KSPlayerResource(url: url2, options: options, name: "Video 2")
 
-        // 测试资源相等性（基于URL和名称）
-        #expect(resource1.name == resource2.name)
-        #expect(resource1.definitions[0].url == resource2.definitions[0].url)
-        #expect(resource1.name != resource3.name)
-        #expect(resource1.definitions[0].url != resource3.definitions[0].url)
+        // 测试资源相等性(基于URL和名称)
+        XCTAssertEqual(resource1.name, resource2.name)
+        XCTAssertEqual(resource1.definitions[0].url, resource2.definitions[0].url)
+        XCTAssertNotEqual(resource1.name, resource3.name)
+        XCTAssertNotEqual(resource1.definitions[0].url, resource3.definitions[0].url)
     }
 
-    @Test
-    func `local resource`() {
+    func testLocalResource() {
         let bundle = Bundle(for: Self.self)
         guard let path = bundle.path(forResource: "h264", ofType: "mp4") else { return }
         let url = URL(fileURLWithPath: path)
         let resource = KSPlayerResource(url: url, options: KSOptions())
 
-        #expect(resource.definitions.first?.url.isFileURL == true)
+        XCTAssertEqual(resource.definitions.first?.url.isFileURL, true)
     }
 }

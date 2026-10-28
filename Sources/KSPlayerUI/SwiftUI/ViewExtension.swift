@@ -8,6 +8,8 @@
 import SwiftUI
 
 #if !os(tvOS)
+// @FocusedObject 是 iOS 17(Xcode 15)符号,Xcode 14 SDK 中不存在,需编译期裁剪
+#if compiler(>=5.9)
 @available(iOS 16.0, macOS 13.0, tvOS 16.0, watchOS 9.0, *)
 @MainActor
 public struct PlayBackCommands: Commands {
@@ -33,6 +35,20 @@ public struct PlayBackCommands: Commands {
         }
     }
 }
+#else
+// 低版本工具链回退:保持 public 类型名与 init 签名不变。
+// 现状代码在 iOS < 17 运行时下 @FocusedObject 恒为 nil,菜单渲染为空;
+// 该回退实现与之一致(编译期直接走"焦点对象不存在"的既有行为路径)。
+@available(iOS 16.0, macOS 13.0, tvOS 16.0, watchOS 9.0, *)
+@MainActor
+public struct PlayBackCommands: Commands {
+    public init() {}
+
+    public var body: some Commands {
+        CommandMenu("PlayBack") {}
+    }
+}
+#endif
 #endif
 
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, *)
@@ -121,6 +137,9 @@ public extension View {
     @available(iOS 14, macOS 11, tvOS 15, *)
     @ViewBuilder
     func circleGlassButton() -> some View {
+        // buttonStyle(.glass) 是 iOS 26(Xcode 26)符号,低版本 SDK 中不存在;
+        // 低版本工具链编译期直接走现状已有的回退分支(tvOS 17 → borderless,否则 automatic)
+        #if compiler(>=6.2)
         if #available(iOS 26.0, macOS 26.0, tvOS 26.0, *) {
             #if os(visionOS)
             buttonBorderShape(.circle)
@@ -133,6 +152,13 @@ public extension View {
         } else {
             buttonStyle(.automatic)
         }
+        #else
+        if #available(tvOS 17.0, *) {
+            buttonStyle(.borderless)
+        } else {
+            buttonStyle(.automatic)
+        }
+        #endif
     }
 }
 
@@ -335,7 +361,10 @@ extension Bool {
 }
 
 extension View {
+    // onKeyPress(_:) 是 iOS 17(Xcode 15)符号,低版本 SDK 中不存在;
+    // 低版本工具链编译期直接走现状已有的回退分支(return self,等价于 iOS < 17 运行时行为)
     func onKeyPressLeftArrow(action: @escaping () -> Void) -> some View {
+        #if compiler(>=5.9)
         if #available(iOS 17.0, macOS 14.0, tvOS 17.0, *) {
             return onKeyPress(.leftArrow) {
                 action()
@@ -344,9 +373,13 @@ extension View {
         } else {
             return self
         }
+        #else
+        return self
+        #endif
     }
 
     func onKeyPressRightArrow(action: @escaping () -> Void) -> some View {
+        #if compiler(>=5.9)
         if #available(iOS 17.0, macOS 14.0, tvOS 17.0, *) {
             return onKeyPress(.rightArrow) {
                 action()
@@ -355,9 +388,13 @@ extension View {
         } else {
             return self
         }
+        #else
+        return self
+        #endif
     }
 
     func onKeyPressSapce(action: @escaping () -> Void) -> some View {
+        #if compiler(>=5.9)
         if #available(iOS 17.0, macOS 14.0, tvOS 17.0, *) {
             return onKeyPress(.space) {
                 action()
@@ -366,6 +403,9 @@ extension View {
         } else {
             return self
         }
+        #else
+        return self
+        #endif
     }
 
     #if !os(tvOS)

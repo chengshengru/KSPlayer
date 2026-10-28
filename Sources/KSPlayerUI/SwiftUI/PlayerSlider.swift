@@ -218,11 +218,17 @@ extension View {
     @ViewBuilder
     func glassBackground() -> some View {
 #if os(tvOS)
+        // glassEffect(_:) 是 tvOS 26(Xcode 26)符号,低版本 SDK 中不存在;
+        // 低版本工具链编译期直接走现状已有的回退分支(trackColor 背景)
+        #if compiler(>=6.2)
         if #available(tvOS 26.0, *) {
             glassEffect(.clear)
         } else {
             background(KSOptions.trackColor)
         }
+        #else
+        background(KSOptions.trackColor)
+        #endif
 #else
         background(.ultraThinMaterial)
 #endif

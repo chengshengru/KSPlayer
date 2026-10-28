@@ -455,12 +455,62 @@ gantt
     M6 四档 Xcode 矩阵构建 + API diff 门禁 + main 功能回归对照 :a6, after a5, 1
 ```
 
-| 里程碑 | 交付物 | 退出标准 |
-|---|---|---|
-| M1 | 基线 interface/abi 存档、FFmpegKit 实测报告 | Xcode 14.2 能解析 FFmpegKit 9.0.2 manifest(否则锁本地路径/降级) |
-| M2 | 新 KSPlayer.xcframework | Xcode 14.2 `import KSPlayer` 成功;abi diff 仅 translationView 放宽 |
-| M3–M5 | 本仓库改造 PR | 14.2 与 26.6 下 `swift build` 全 target 通过 |
-| M6 | 验证报告 | §6 门禁全绿;README 示例代码双版本可编译;§6.2 功能回归对照清单双工具链逐项比对与 main 分支行为一致 |
+| 里程碑 | 交付物 | 退出标准 | 状态(2026-10-28) |
+|---|---|---|---|
+| M1 | 基线 interface/abi 存档、FFmpegKit 实测报告 | Xcode 14.2 能解析 FFmpegKit 9.0.2 manifest(否则锁本地路径/降级) | ⏳ 部分:沙箱已用 Swift 5.7.3(Linux)实证 manifest/预处理语义;FFmpegKit 需 macOS 实机验证 |
+| M2 | 新 KSPlayer.xcframework | Xcode 14.2 `import KSPlayer` 成功;abi diff 仅 translationView 放宽 | 🔴 **外部阻塞**:核心仓库重编,本仓库无法执行(沙箱无 Apple 工具链) |
+| M3 | Package.swift/资源/格式化/CI 双兼容改造 | 14.2 与 26.6 下 `swift build` 全 target 通过 | ✅ 已完成(见 §11),双工具链 manifest 解析均通过 |
+| M4 | KSPlayerUI visionOS + iOS17/26 守卫 | 同上 | ✅ 已完成(范围按 §11 实证修正收窄) |
+| M5 | MPVPlayer iOS18 守卫 + 测试改写 | 同上 | ✅ 已完成 |
+| M6 | 四档 Xcode 矩阵构建 + API diff 门禁 + main 功能回归对照 | §6 门禁全绿;README 示例代码双版本可编译;§6.2 功能回归对照清单双工具链逐项比对与 main 分支行为一致 | ⏳ 待 M2 后在 macOS CI 执行(矩阵已就绪) |
+
+---
+
+## 11. 实施记录与实证修正(2026-10-28,M3–M5)
+
+> 作者:Shiro。本节记录按本方案实施时的**实测发现**对设计稿的修正,以及实际改动清单。
+> 验证环境:Linux 沙箱,Swift 5.7.3(swiftly 下载官方工具链)与 Swift 6.2.4 双工具链;无 Xcode/Apple SDK,故验证手段为 **manifest 双工具链解析 + 全改动文件 `swiftc -parse`(两代工具链各自展开对应守卫分支)+ §6.1-3 diff 白名单审查**,真实 Apple 平台编译留待 M6 CI。
+
+### 11.1 实证修正(与设计稿不符之处)
+
+| # | 设计稿假设 | 实测结论 | 处置 |
+|---|---|---|---|
+| E1 | G9:`#if os(visionOS)` 在 5.7 下**编译报错**,全工程 20+ 处必须包 `#if compiler(>=5.9)` | Swift 5.7.3 对未知平台名仅发 **warning**(`unknown operating system for build configuration 'os'`),条件按 false 求值——正向块自动跳过、负向块(`!os(visionOS)`)自动包含,**语义天然正确**;且 `||`/`&&` 不短路该 warning | 负向/复合/含 `#else` 的 visionOS 字面量站点**保持原样不改动**(Xcode 14 下仅告警,不影响构建);纯正向块(5 处,内容含 visionOS 专属符号)外层包 `#if compiler(>=5.9)` 消除告警 |
+| E2 | G3:Package.swift 可用 `#if compiler(>=5.9)` 条件追加 `.visionOS(.v1)` | `.visionOS` 是 PackageDescription **5.9 API**,tools-version 5.7 的 manifest 被 `-package-description-version 5.7.0` 可用性门控,**任何工具链均无法引用**;`if #available(_PackageDescription 5.9, *)` 与 `@available` 包裹函数两种解锁写法实测均失败(自定义可用性域需 Swift 6.1+ 语言特性) | platforms 不声明 visionOS(SPM 语义:未声明平台仍可构建,部署版本取自主工程);Xcode 15+ 下 visionOS 构建照常,**仅失去"最低 visionOS 1.0"显式声明**,源码层 `#if os(visionOS)` 不受影响。此为构建元数据差异,不触碰任何 API |
+| E3 | §6.1-3 白名单:守卫行之外**零 diff** | 两处 iOS 26/tvOS 26 站点(`circleGlassButton`、`glassBackground`)若只包内层表达式,低版本下 `if #available(iOS 26)` 分支体为空 → @ViewBuilder 产出 EmptyView → **控件整体消失**(而非样式降级),违反功能一致目标;`PlayBackCommands` 的 public 类型在 5.7 必须存在 | 白名单细化为:**禁止修改/删除任何既有行**(实测 diff 中 `-` 行为 0),允许在 `#if compiler` 的 `#else` 分支内**逐字复制既有回退行**(`return self`、`background(KSOptions.trackColor)`、tvOS17/automatic 链等)或按 §4.4 提供 public 类型的等价回退实现(`PlayBackCommands` 空菜单版,等价于 iOS<17 现状行为) |
+| E4 | G5:仅导出 `en.lproj`(67 key) | xcstrings 实际含 6 语言(ar/de/es/fr/zh-Hans/en)共 259 条翻译;仅导出 en 会使低版本构建丢失翻译,偏离"与 main 产物行为一致" | 全量导出 6 个 `.lproj`;高版本分支以 `exclude: ["Resources"]` 排除回退目录(避免 unhandled file 警告),两分支互斥 |
+
+### 11.2 实际改动清单
+
+**构建与配置(M3)**
+
+- [Package.swift](../../Package.swift):`swift-tools-version:6.2→5.7`;删 `swiftLanguageModes`(两代工具链统一 5 mode,行为零差异);`#if compiler(>=5.9)` 条件化 `-experimental-package-interface-load`(3 处 target 合一变量)与 xcstrings/Resources 资源二选一;platforms 去 visionOS(E2);FFmpegKit 本地路径探测逻辑原样保留。双工具链 `swift package dump-package` 均通过,且实测 5.7 分支无 unsafeFlags、6.2 分支含 3 处。
+- `Sources/KSPlayerUI/Resources/{en,ar,de,es,fr,zh-Hans}.lproj/Localizable.strings`:由脚本从 [Localizable.xcstrings](../../Sources/KSPlayerUI/Localizable.xcstrings) 同源全量导出(E4),xcstrings 保留供高版本。
+- [.swiftformat](../../.swiftformat):`--swiftversion 6.3→5.7`。
+- [.github/workflows/build.yml](../../.github/workflows/build.yml):矩阵化 14.2/15.4/16.4/26.6 四档;14.2 档暂 `continue-on-error`(M2 重编二进制前必红),M2 后移除即转为合入门禁。
+
+**KSPlayerUI 源码(M4,仅加守卫,既有行零修改)**
+
+- [ViewExtension.swift](../../Sources/KSPlayerUI/SwiftUI/ViewExtension.swift):`PlayBackCommands` 包 `#if compiler(>=5.9)` + `#else` 等价回退(空菜单,等价 iOS<17 现状);`circleGlassButton` 整子句包 `#if compiler(>=6.2)` + `#else` 既有回退链;`onKeyPressLeftArrow/RightArrow/Sapce` 各包 `#if compiler(>=5.9)` + `#else return self`。
+- [KSVideoPlayerView.swift](../../Sources/KSPlayerUI/SwiftUI/KSVideoPlayerView.swift):`.focusedObject` 包 `#if compiler(>=5.9)`。
+- [KSCorePlayerView.swift](../../Sources/KSPlayerUI/SwiftUI/KSCorePlayerView.swift):`.translationView` 包 `#if compiler(>=5.9)`(package 符号 5.7 不可见;§4.3 提升 public 后该守卫仍兼容,无需二次改动)。
+- [PlayerSlider.swift](../../Sources/KSPlayerUI/SwiftUI/PlayerSlider.swift):`glassEffect(.clear)` 子句包 `#if compiler(>=6.2)` + `#else` trackColor 回退。
+- [VideoControllerView.swift](../../Sources/KSPlayerUI/SwiftUI/VideoControllerView.swift):4 处纯正向 visionOS 块(glassBackgroundEffect×3、ornament、tint)外层补 `#if compiler(>=5.9)`;负向块(L154 `!os(visionOS)`)与复合行(L324)按 E1 保持原样。
+- [KSVideoPlayerViewBuilder.swift](../../Sources/KSPlayerUI/SwiftUI/KSVideoPlayerViewBuilder.swift):L164 symbolEffect 正向块外层补 `#if compiler(>=5.9)`;L241/258 含 `#else` 的复合行按 E1 保持原样。
+- [IOSVideoPlayerView.swift](../../Sources/KSPlayerUI/SwiftUI/../View/IOSVideoPlayerView.swift)、[AirPlayView.swift](../../Sources/KSPlayerUI/SwiftUI/AirPlayView.swift)、[BrightnessVolume.swift](../../Sources/KSPlayerUI/View/BrightnessVolume.swift):**无改动**(全部为负向/含 `#else` 的 visionOS 字面量,5.7 下语义自动正确,E1)。
+- [KSVideoPlayer.swift](../../Sources/KSPlayerUI/SwiftUI/KSVideoPlayer.swift):复核确认无需改动(无 visionOS 字面量、无新 SDK 符号裸引用)。
+
+**MPVPlayer(M5)**
+
+- [KSMPVPlayer.swift](../../Sources/MPVPlayer/KSMPVPlayer.swift):`_playbackCoordinator` 初始化体包 `#if compiler(>=6.0)` + `#else return nil`(等价既有 nil 路径);`AVPlaybackCoordinatorPlaybackControlDelegate` 整扩展包 `#if compiler(>=6.0)`。
+
+**测试(M5)**
+
+- [KSPlayerResourceTest.swift](../../Tests/KSPlayerUITests/KSPlayerResourceTest.swift):Swift Testing → XCTest 等价改写(8 用例、断言逐条映射:`#require`→`XCTUnwrap`、`#expect(a==b)`→`XCTAssertEqual`、`===`→`XCTAssertIdentical` 等,不减不增)。
+
+**验证结果**:8 个改动源文件在 Swift 5.7.3 与 6.2.4 下 `swiftc -parse` 全部通过(两代分支各自展开);`git diff -U0 -- Sources/` 无任何 `-` 行(既有代码零修改),新增非守卫行仅为注释与 `#else` 内逐字回退复制(E3)。
+
+**遗留事项**:①M2(xcframework 5.7 重编 + `translationView` package→public)为核心仓库外部阻塞项,完成前 Xcode 14 无法实际集成;②`PlayBackCommands` 的 `@available(iOS 16)`/`@FocusedObject`(iOS 17)标注矛盾按 §9 维持现状,待移植后独立 PR;③§6.1 符号级 ABI diff 与 §6.2 双工具链功能回归对照需 macOS 环境执行(M6)。
 
 ---
 

@@ -161,8 +161,10 @@ public enum KSVideoPlayerViewBuilder {
                 .centerControlButtonStyle()
             #endif
         }
+        #if compiler(>=5.9)
         #if os(visionOS)
         .contentTransition(.symbolEffect(.replace))
+        #endif
         #endif
         #if !os(tvOS)
         .keyboardShortcut(.space, modifiers: .none)

@@ -132,7 +132,10 @@ public struct KSVideoPlayerView: View {
 #if os(iOS)
             .statusBar(hidden: !model.config.isMaskShow)
 #endif
+            // focusedObject(_:) 是 iOS 17(Xcode 15)符号,低版本工具链下裁剪(等价于 iOS < 17 运行时行为)
+            #if compiler(>=5.9)
             .focusedObject(model.config)
+            #endif
             .onChange(of: model.config.isMaskShow) { newValue in
                 if newValue {
                     model.focusableView = .controller

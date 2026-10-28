@@ -62,6 +62,9 @@ public final class KSMPVPlayer: MPVHandle, @unchecked Sendable {
     public var fileSize: Int64 = 0
     public var naturalSize: CGSize = .zero
     private lazy var _playbackCoordinator: Any? = {
+        // AVDelegatingPlaybackCoordinator 是 iOS 18(Xcode 16)符号,低版本 SDK 中不存在;
+        // 低版本工具链编译期返回 nil(等价于 iOS < 15 运行时既有路径)
+        #if compiler(>=6.0)
         if #available(macOS 12.0, iOS 15.0, tvOS 15.0, *) {
             let coordinator = AVDelegatingPlaybackCoordinator(playbackControlDelegate: self)
             coordinator.suspensionReasonsThatTriggerWaiting = [.stallRecovery]
@@ -69,6 +72,9 @@ public final class KSMPVPlayer: MPVHandle, @unchecked Sendable {
         } else {
             return nil
         }
+        #else
+        return nil
+        #endif
     }()
 
     private var tracks = [MPVTrack]()
@@ -314,6 +320,9 @@ extension KSMPVPlayer {
     }
 }
 
+// AVPlaybackCoordinatorPlaybackControlDelegate 与 AVDelegatingPlaybackCoordinator 族均为
+// iOS 18(Xcode 16)符号,低版本 SDK 中不存在,整个委托扩展在低版本工具链下裁剪
+#if compiler(>=6.0)
 @available(macOS 12.0, iOS 15.0, tvOS 15.0, *)
 extension KSMPVPlayer: AVPlaybackCoordinatorPlaybackControlDelegate {
     public func playbackCoordinator(_: AVDelegatingPlaybackCoordinator, didIssue playCommand: AVDelegatingPlaybackCoordinatorPlayCommand) async {
@@ -355,6 +364,7 @@ extension KSMPVPlayer: AVPlaybackCoordinatorPlaybackControlDelegate {
         try? await Task.sleep(nanoseconds: UInt64(countDown * 1_000_000_000))
     }
 }
+#endif
 
 extension KSMPVPlayer: ConstantSubtitleDataSource {
     public func infos() -> [SubtitleInfo] {

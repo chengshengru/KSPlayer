@@ -117,14 +117,18 @@ struct VideoControllerView: View {
                     Image(systemName: "x.circle.fill")
                         .centerControlButtonStyle()
                 }
+                #if compiler(>=5.9)
                 #if os(visionOS)
                 .glassBackgroundEffect()
                 #endif
+                #endif
                 if let audioTracks = model.config.playerLayer?.player.tracks(mediaType: .audio), !audioTracks.isEmpty {
                     KSVideoPlayerViewBuilder.audioButton(config: model.config, audioTracks: audioTracks)
+                    #if compiler(>=5.9)
                     #if os(visionOS)
                     .aspectRatio(1, contentMode: .fit)
                     .glassBackgroundEffect()
+                    #endif
                     #endif
                 }
                 Spacer()
@@ -210,6 +214,7 @@ struct VideoControllerView: View {
         .sheet(isPresented: $model.showVideoSetting) {
             VideoSettingView(model: model)
         }
+        #if compiler(>=5.9)
         #if os(visionOS)
         .ornament(visibility: model.config.isMaskShow ? .visible : .hidden, attachmentAnchor: .scene(.bottom)) {
             VStack(alignment: .leading) {
@@ -238,6 +243,7 @@ struct VideoControllerView: View {
             .padding(.horizontal, 36)
             .glassBackgroundEffect()
         }
+        #endif
         #endif
         // macOS要写在这里才能隐藏，写在外面无法隐藏
         .opacity(model.config.isMaskShow ? 1 : 0)
@@ -269,8 +275,10 @@ struct VideoTimeShowView: View {
                     }
                 }
                 .frame(maxHeight: 20)
+                #if compiler(>=5.9)
                 #if os(visionOS)
                 .tint(.white.opacity(0.8))
+                #endif
                 #endif
                 Text((model.totalTime).toString(for: .minOrHour))
             }

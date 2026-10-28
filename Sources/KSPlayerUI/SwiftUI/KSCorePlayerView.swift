@@ -43,7 +43,11 @@ public struct KSCorePlayerView: View {
                 KSLog("bufferedCount:\(bufferedCount),consumeTime:\(consumeTime)")
             }
         #if (os(iOS) || os(macOS))
+        // translationView(subtitleModel:) 在 KSPlayer 二进制中是 package 访问级符号(仅 package.swiftinterface 可见,
+        // Swift 5.9+ 工具链配合 -experimental-package-interface-load 加载;5.7 无 package 访问级,直接裁剪)
+        #if compiler(>=5.9)
             .translationView(subtitleModel: config.playerLayer?.subtitleModel)
+        #endif
         #endif
             .ignoresSafeArea()
 
