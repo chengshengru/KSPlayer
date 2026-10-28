@@ -3,7 +3,9 @@
 > 作者:Shiro
 > 日期:2026-10-28
 > 分支:`trae/agent-0tsa5E`(基于 main @ 7d6b4ce)
-> 目标:在**不改变任何对外暴露 API(方法签名、类型、访问级别、默认参数)**的前提下,使本工程可同时被 **Swift 5.7 / Xcode 14.0–14.2(低版本)** 与现有 **Swift 6.x / Xcode 15–26(高版本)** 编译使用。
+> 目标:在**不改变任何对外暴露 API(方法签名、类型、访问级别、默认参数)**、且**功能行为与 main 分支完全一致**的前提下,使本工程可同时被 **Swift 5.7 / Xcode 14.0–14.2(低版本)** 与现有 **Swift 6.x / Xcode 15–26(高版本)** 编译使用。
+>
+> 基线说明:已核实 `git diff main..HEAD` 仅含本文档差异,**main 分支与当前分支代码逐字节一致**,故"功能与 main 分支一致"即"与现状代码功能一致",以现状代码为唯一功能基线(详见 §6.2)。
 
 ---
 
@@ -14,7 +16,7 @@
 3. [Swift 5.7 兼容性差距分析](#3-swift-57-兼容性差距分析)
 4. [移植总体方案](#4-移植总体方案)
 5. [逐文件改造清单](#5-逐文件改造清单)
-6. [对外 API 不变的保障措施](#6-对外-api-不变的保障措施)
+6. [对外 API 与功能一致性的保障措施](#6-对外-api-与功能一致性的保障措施)
 7. [Xcode 兼容矩阵与 CI 改造](#7-xcode-兼容矩阵与-ci-改造)
 8. [实施步骤与里程碑](#8-实施步骤与里程碑)
 9. [风险与缓解](#9-风险与缓解)
@@ -35,6 +37,7 @@
 | 约束 | 说明 |
 |---|---|
 | **API 零变更** | 所有 `public`/`open` 声明的签名、默认参数、`@available` 标注、访问级别对高版本 Xcode 用户保持逐字节兼容 |
+| **功能与 main 分支一致** | 移植仅增加编译期守卫(`#if compiler`)与构建配置条件化,**不修改任何函数体、条件表达式、分支逻辑**;运行时行为以 main 分支代码为唯一基线,逐功能域等价(见 §6.2) |
 | **低版本可用** | Xcode 14.0–14.2(Swift 5.7)可 `swift build` / SPM 集成 / 编译通过 |
 | **高版本不回退** | Xcode 15–26 下行为与现在一致,新 SDK 上的 iOS 17/26 视觉特性仍生效 |
 | **不破坏二进制兼容** | KSPlayer 模块已开启 Library Evolution,重编后仍需保持 `.abi.json` 稳定 |
@@ -363,7 +366,9 @@ Xcode 14 时代 visionOS 尚未发布,该平台的**运行支持**在低版本�
 
 ---
 
-## 6. 对外 API 不变的保障措施
+## 6. 对外 API 与功能一致性的保障措施
+
+### 6.1 API 面不变(符号级门禁)
 
 ```mermaid
 flowchart LR
@@ -381,6 +386,34 @@ flowchart LR
 3. **源码侧 369 个 public 声明**:改造只增 `#if` 行,不动任何声明行——用 `git diff -U0 | grep '^[+-]' | grep -v '^[+-][+-]' | grep -vE '#if|#endif|#else'` 审查,确保除守卫外零 diff;
 4. **双工具链冒烟**:同一 Demo 工程分别用 Xcode 14.2/26.6 编译运行,调用面(README 示例代码)逐条走查;
 5. **高版本行为回归**:`#if compiler(>=5.9)` 在高版本恒为真 → 预处理后 AST 与现状等价,`#available` 分支不变 → 运行行为不变。
+
+### 6.2 功能行为与 main 分支一致(功能等价基线)
+
+**核心原则:移植是"编译期裁剪",不是"功能改写"。** main 分支代码中所有新 SDK API 调用**均已存在** `#available` 运行时回退分支(现状即如此设计),移植仅通过 `#if compiler` 让低版本工具链在编译期直接走这些**既有的回退路径**,不新增、不删除、不修改任何一条运行时逻辑。因此:
+
+- **高版本 Xcode**:守卫恒为真,预处理后代码与 main 分支逐 AST 等价 → 功能 100% 一致;
+- **低版本 Xcode**:功能等价于"main 分支产物运行在低版本 OS"时的行为(即现状已有的回退行为),而非功能缺失。
+
+逐功能域等价矩阵:
+
+| 功能域 | main 分支行为(基线) | 低版本 Xcode 移植后行为 | 高版本 Xcode 移植后行为 | 等价依据 |
+|---|---|---|---|---|
+| 播放内核(HDR/PiP/字幕/倍速/截图) | KSPlayer 二进制 | 同源码重编,ABI/API diff 门禁 | 同左 | §6.1 + 重编不改逻辑 |
+| 基础播控 UI(KSVideoPlayerView/工具栏/进度条) | 源码 | 守卫仅裁剪 visionOS/iOS26 字面量,主体逻辑不动 | 恒真,等价 | 仅增 `#if` 行,diff 白名单审查 |
+| iOS 26 玻璃按钮(`.glass`/`glassEffect`) | `#available(iOS 26)` 真→玻璃,假→`buttonStyle(.automatic)`/`trackColor` 背景 | 编译期直接取**既有** fallback 分支 | 与 main 完全一致 | [ViewExtension.swift L124-136](../../Sources/KSPlayerUI/SwiftUI/ViewExtension.swift)、[PlayerSlider.swift L219-229](../../Sources/KSPlayerUI/SwiftUI/PlayerSlider.swift) 现状已含回退 |
+| iOS 17 按键(`onKeyPress`)/焦点(`focusedObject`) | `#available(iOS 17)` 假→`return self`/无焦点联动 | 取既有 `return self` 分支(等价于 iOS 16 上的现状行为) | 与 main 一致 | [ViewExtension.swift L338-368](../../Sources/KSPlayerUI/SwiftUI/ViewExtension.swift) |
+| visionOS `ornament`/`glassBackgroundEffect` | visionOS 1 专属 | 平台物理不存在,整段裁剪(§4.5) | 与 main 一致 | 仅 visionOS 生效,非跨平台功能 |
+| MPV 播放器 + iOS 18 `AVDelegatingPlaybackCoordinator` | `#available(iOS 15)` 内嵌 iOS 18 委托路径,iOS<18 走普通 AVPlayerLayer 路径 | 裁剪委托扩展,行为=现状 iOS<18 路径 | 与 main 一致 | [KSMPVPlayer.swift L65/317-360](../../Sources/MPVPlayer/KSMPVPlayer.swift) |
+| 本地化(67 词条) | xcstrings | `.strings` 由脚本从 xcstrings **同源导出** | xcstrings 原样 | CI 自动同步,防漂移(§9) |
+| 测试覆盖 | Swift Testing 用例 | XCTest **等价断言映射**(`#expect`→`XCTAssertEqual` 等),用例数与断言不减不增 | 同左 | §4.6 |
+
+**功能回归对照清单(M6 验收项)**:同一 Demo 工程、同一视频素材,双工具链各执行一遍并比对结果——播放/暂停/seek/倍速、字幕加载与切换、音轨选择、PiP 进出、AirPlay 探测、HDR 动态范围显示、截图录制、tvOS 焦点导航与确认键 seek、macOS 窗口控制与 hover 隐藏、播放列表上/下曲。任一行为差异即视为移植缺陷,回查守卫是否误圈逻辑行。
+
+**禁止事项(保障功能一致的硬规则)**:
+
+1. 禁止修改任何函数体、表达式、`#available` 条件、默认参数值;
+2. 禁止借移植之名"顺手"修正 §9 所列 `@available` 标注错误(应独立 PR,由用户确认);
+3. `#if compiler` 守卫只允许包裹"含新 SDK 符号/visionOS 字面量的最小连续代码段",PR 审查用 §6.1-3 的 diff 白名单命令,守卫行之外出现任何 diff 即阻断合入。
 
 ---
 
@@ -419,7 +452,7 @@ gantt
     M4 KSPlayerUI 20 处 visionOS + iOS17/26 守卫 :a4, after a3, 2
     M5 MPVPlayer iOS18 守卫 + 测试改写 :a5, after a4, 1
     section 验收
-    M6 四档 Xcode 矩阵构建 + API diff 门禁 + Demo 冒烟 :a6, after a5, 1
+    M6 四档 Xcode 矩阵构建 + API diff 门禁 + main 功能回归对照 :a6, after a5, 1
 ```
 
 | 里程碑 | 交付物 | 退出标准 |
@@ -427,7 +460,7 @@ gantt
 | M1 | 基线 interface/abi 存档、FFmpegKit 实测报告 | Xcode 14.2 能解析 FFmpegKit 9.0.2 manifest(否则锁本地路径/降级) |
 | M2 | 新 KSPlayer.xcframework | Xcode 14.2 `import KSPlayer` 成功;abi diff 仅 translationView 放宽 |
 | M3–M5 | 本仓库改造 PR | 14.2 与 26.6 下 `swift build` 全 target 通过 |
-| M6 | 验证报告 | §6 门禁全绿;README 示例代码双版本可编译 |
+| M6 | 验证报告 | §6 门禁全绿;README 示例代码双版本可编译;§6.2 功能回归对照清单双工具链逐项比对与 main 分支行为一致 |
 
 ---
 
@@ -437,7 +470,8 @@ gantt
 |---|---|---|
 | FFmpegKit 9.0.2 的 tools-version > 5.7,Xcode 14 无法解析依赖 | 🔴 | M1 先实测;不行则:本地 path 依赖指向兼容版本 / 推动 FFmpegKit 出 5.7 兼容 tag / 该组合仅支持 Xcode 15+ 并在 README 声明 |
 | KSPlayer 核心源码本身含 5.8+ 语法,无法用 Xcode 14.2 重编 | 🔴 | 退化为方案 B(源码 target);或先在核心仓库做一轮 5.7 语法回退(同样受 §6 API 门禁约束) |
-| `@available(iOS 16)` 标注的 `PlayBackCommands` 实际用了 iOS 17 的 `@FocusedObject`(现状疑似标注错误) | 🟡 | 移植时一并修正为 iOS 17;属于**收紧**,需确认无 16.x 用户调用,否则用 `#if compiler` + 运行时降级实现替代 |
+| `@available(iOS 16)` 标注的 `PlayBackCommands` 实际用了 iOS 17 的 `@FocusedObject`(现状疑似标注错误) | 🟡 | **移植期间维持现状不动**(保障与 main 功能一致,见 §6.2 禁止事项-2);移植完成后以独立 PR 修正,由用户确认 |
+| 守卫误圈逻辑行导致功能与 main 漂移 | 🟡 | §6.1-3 diff 白名单命令阻断合入 + §6.2 回归对照清单双工具链比对 |
 | 重编 xcframework 引入 ABI 漂移(编译器版本变化导致 mangling 差异) | 🟡 | Library Evolution 下 ABI 由 interface 契约保证;abi.json diff 门禁兜底 |
 | 条件守卫漏加导致低版本编译失败 | 🟡 | CI 矩阵 14.2 为合入门禁;§5 清单逐项勾销 |
 | xcstrings→strings 双份资源漂移(高版本改翻译忘同步低版本) | 🟢 | 脚本从 xcstrings 自动导出 strings,纳入 CI |
