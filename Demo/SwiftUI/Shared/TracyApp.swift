@@ -8,7 +8,6 @@
 import AVFoundation
 import AVKit
 import KSPlayer
-import KSPlayerUI
 import SwiftUI
 import UserNotifications
 
@@ -51,7 +50,7 @@ struct TracyApp: App {
                 .environmentObject(appModel)
                 .environment(\.managedObjectContext, PersistenceController.shared.viewContext)
             #if !os(tvOS)
-            .handlesExternalEvents(preferring: Set(arrayLiteral: "pause"), allowing: Set(arrayLiteral: "*"))
+                .handlesExternalEvents(preferring: Set(arrayLiteral: "pause"), allowing: Set(arrayLiteral: "*"))
             #endif
         }
         #if !os(tvOS)
@@ -88,7 +87,7 @@ struct TracyApp: App {
         #if !os(tvOS)
         WindowGroup("player", for: MovieModel.self) { $model in
             if let model {
-                model.view
+                KSVideoPlayerView(model: model)
             }
         }
         #if os(macOS)
@@ -97,9 +96,7 @@ struct TracyApp: App {
         #endif
         #if os(macOS)
         Settings {
-            NavigationSplitView {
-                TabBarItem.Setting.destination(appModel: appModel)
-            } detail: {}
+            TabBarItem.Setting.destination(appModel: appModel)
         }
 //        MenuBarExtra {
 //            MenuBar()
@@ -107,13 +104,6 @@ struct TracyApp: App {
 //            Image(systemName: "film.fill")
 //        }
 //        .menuBarExtraStyle(.menu)
-        #endif
-        #if os(visionOS)
-        // immersive
-        ImmersiveSpace(id: "ImmersiveView", for: String.self) { url in
-            ImmersiveView(url: url)
-        }
-        .immersionStyle(selection: .constant(.full), in: .full)
         #endif
     }
 }
@@ -128,39 +118,32 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 //        requestNotification()
         true
     }
-
-    #if os(iOS)
-    func application(_: UIApplication, supportedInterfaceOrientationsFor _: UIWindow?) -> UIInterfaceOrientationMask {
-        KSOptions.supportedInterfaceOrientations ?? .all
-    }
-    #endif
     #endif
 
     func application(_: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
         let tokenString = deviceToken.reduce("") { $0 + String(format: "%02x", $1) }
-        KSLog("Device push notification token - \(tokenString)")
+        print("Device push notification token - \(tokenString)")
     }
 
     func application(_: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
-        KSLog("Failed to register for remote notification. Error \(error)")
+        print("Failed to register for remote notification. Error \(error)")
     }
 
     private func requestNotification() {
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { allowed, error in
             if allowed {
                 // register for remote push notification
-                Task { @MainActor in
+                DispatchQueue.main.async {
                     UIApplication.shared.registerForRemoteNotifications()
                 }
-                KSLog("Push notification allowed by user")
+                print("Push notification allowed by user")
             } else {
-                KSLog("Error while requesting push notification permission. Error \(String(describing: error))")
+                print("Error while requesting push notification permission. Error \(String(describing: error))")
             }
         }
     }
 }
 
-@MainActor
 class APPModel: ObservableObject {
     @Published
     var openURL: URL?
@@ -196,7 +179,6 @@ class APPModel: ObservableObject {
 
     init() {
         #if DEBUG
-        KSOptions.logLevel = .warning
 //        KSOptions.logLevel = .debug
         #else
         var fileHandle = FileHandle.standardOutput
@@ -214,7 +196,7 @@ class APPModel: ObservableObject {
 //        KSOptions.firstPlayerType = KSMEPlayer.self
         KSOptions.secondPlayerType = KSMEPlayer.self
         _ = Defaults.shared
-        KSOptions.subtitleDataSources = [DirectorySubtitleDataSource(), ShooterSubtitleDataSource(), AssrtSubtitleDataSource(token: "5IzWrb2J099vmA96ECQXwdRSe9xdoBUv"), OpenSubtitleDataSource(apiKey: "0D0gt8nV6SFHVVejdxAMpvOT0wByfKE5")]
+        KSOptions.subtitleDataSouces = [DirectorySubtitleDataSouce(), ShooterSubtitleDataSouce(), AssrtSubtitleDataSouce(token: "5IzWrb2J099vmA96ECQXwdRSe9xdoBUv"), OpenSubtitleDataSouce(apiKey: "0D0gt8nV6SFHVVejdxAMpvOT0wByfKE5")]
         if let activeM3UURL {
             addM3U(url: activeM3UURL)
         }

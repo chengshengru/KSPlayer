@@ -6,7 +6,6 @@
 //
 
 import KSPlayer
-import KSPlayerUI
 import SwiftUI
 
 struct FilesView: View {
@@ -168,11 +167,6 @@ struct AddM3UView: View {
                 .keyboardShortcut(.cancelAction)
                 #endif
             }
-        }
-        .formStyle(.columns)
-        .padding()
-        #if os(vrOS)
-        .frame(width: 500, height: 500)
-        #endif
+        }.padding()
     }
 }

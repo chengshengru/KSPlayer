@@ -1,19 +1,16 @@
 import KSPlayer
-import KSPlayerUI
 import SwiftUI
 
 struct HomeView: View {
-    #if os(visionOS)
-    @Environment(\.openImmersiveSpace) private var openImmersiveSpace
-    #endif
-
     @EnvironmentObject
     private var appModel: APPModel
     @State
     private var nameFilter: String = ""
     @State
     private var groupFilter: String?
-    ///    @Environment(\.horizontalSizeClass) var horizontalSizeClass
+    @Default(\.showRecentPlayList)
+    private var showRecentPlayList
+//    @Environment(\.horizontalSizeClass) var horizontalSizeClass
     @FetchRequest(fetchRequest: MovieModel.playTimeRequest)
     private var historyModels: FetchedResults<MovieModel>
     @FetchRequest
@@ -32,22 +29,24 @@ struct HomeView: View {
                 toolbarView
             }
             #endif
-            Section {
-                ScrollView(.horizontal) {
-                    LazyHStack {
-                        ForEach(historyModels) { model in
-                            appModel.content(model: model)
+            if showRecentPlayList {
+                Section {
+                    ScrollView(.horizontal) {
+                        LazyHStack {
+                            ForEach(historyModels) { model in
+                                appModel.content(model: model)
+                            }
                         }
                     }
+                } header: {
+                    HStack {
+                        Text("Recent Play").font(.title)
+                        Spacer()
+                    }
+                    .padding(.horizontal)
                 }
-            } header: {
-                HStack {
-                    Text("Recent Play").font(.title)
-                    Spacer()
-                }
-                .padding(.horizontal)
+                .padding()
             }
-            .padding()
             Section {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: MoiveView.width))]) {
                     let playlist = movieModels.filter { model in
@@ -61,17 +60,7 @@ struct HomeView: View {
                         return isIncluded
                     }
                     ForEach(playlist) { model in
-                        #if os(visionOS)
-                        Button {
-                            Task { @MainActor in
-                                await openImmersiveSpace(id: "ImmersiveView", value: model.url?.absoluteString ?? "")
-                            }
-                        } label: {
-                            MoiveView(model: model)
-                        }
-                        #else
                         appModel.content(model: model)
-                        #endif
                     }
                 }
 
@@ -138,11 +127,11 @@ struct MoiveView: View {
     static let width: CGFloat = {
         #if canImport(UIKit)
         if UIDevice.current.userInterfaceIdiom == .phone {
-            return min(UIApplication.sceneSize.width, UIApplication.sceneSize.height) / 2 - 20
+            return min(KSOptions.sceneSize.width, KSOptions.sceneSize.height) / 2 - 20
         } else if UIDevice.current.userInterfaceIdiom == .pad {
-            return min(UIApplication.sceneSize.width, UIApplication.sceneSize.height) / 3 - 20
+            return min(KSOptions.sceneSize.width, KSOptions.sceneSize.height) / 3 - 20
         } else if UIDevice.current.userInterfaceIdiom == .tv {
-            return UIApplication.sceneSize.width / 4 - 150
+            return KSOptions.sceneSize.width / 4 - 150
         } else if UIDevice.current.userInterfaceIdiom == .mac {
             return CGFloat(192)
         } else {

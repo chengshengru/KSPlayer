@@ -76,8 +76,6 @@ struct URLImportView: View {
                 #endif
             }
         }
-        // tvOS26要加这个才能显示
-        .formStyle(.columns)
         .padding()
     }
 }
