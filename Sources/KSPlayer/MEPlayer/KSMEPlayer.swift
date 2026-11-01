@@ -107,7 +107,8 @@ public class KSMEPlayer: NSObject {
                 if playbackState == .finished {
                     runOnMainThread { [weak self] in
                         guard let self else { return }
-                        delegate?.finish(player: self, error: nil)
+                        // Swift 5.7:guard let self 绑定不会启用隐式 self(SE-0367 为 5.8+),需显式 self.
+                        self.delegate?.finish(player: self, error: nil)
                     }
                 }
             }
