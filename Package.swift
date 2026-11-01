@@ -58,9 +58,22 @@ let package = Package(
         ),
     ],
     targets: [
-        .binaryTarget(
+        // Xcode 14.2(Swift 5.7)适配:KSPlayer 核心由预编译 xcframework(Swift 6.3.3 产物,
+        // 5.7 无法加载其 swiftinterface)改回源码 target。
+        // 源码取自本仓库二进制化之前的最后一个提交 be7f60d(2026-10-05),
+        // 与 KSPlayerUI/MPVPlayer(072f6a2 引入)属同一 API 世代。
+        // StrictConcurrency 实验特性已移除:5.7 下严格并发检查会产生大量错误,
+        // 且原 xcframework 产物亦未以严格模式对外暴露语义。
+        .target(
             name: "KSPlayer",
-            path: "Sources/KSPlayer.xcframework"
+            dependencies: [
+                .product(name: "FFmpegKit", package: "FFmpegKit"),
+                "DisplayCriteria",
+            ],
+            resources: [.process("Metal/Shaders.metal")]
+        ),
+        .target(
+            name: "DisplayCriteria"
         ),
         .target(
             name: "MPVPlayer",

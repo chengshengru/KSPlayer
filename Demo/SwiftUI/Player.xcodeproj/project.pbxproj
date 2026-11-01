@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		8004D9222C4648B9001936E9 /* ImmersiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8004D9212C4648AF001936E9 /* ImmersiveView.swift */; };
 		8004D9352C464F8D001936E9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AC77DFB226402329001351AE /* Assets.xcassets */; };
+		AC168CC72E2B61440059B080 /* SwiftUIView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC168CC62E2B61440059B080 /* SwiftUIView.swift */; };
 		AC43F6412A5172830026ECF2 /* FavoriteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC43F6402A5172830026ECF2 /* FavoriteView.swift */; };
 		AC43F6442A51916F0026ECF2 /* Model.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = AC43F6422A51916F0026ECF2 /* Model.xcdatamodeld */; };
 		AC43F6662A519D400026ECF2 /* Persistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC43F6652A519D400026ECF2 /* Persistence.swift */; };
@@ -25,12 +26,12 @@
 		ACDEF402307752300048F326 /* KSPlayerUI in Frameworks */ = {isa = PBXBuildFile; productRef = ACDEF401307752300048F326 /* KSPlayerUI */; };
 		ACDEF404307752300048F326 /* MPVPlayer in Frameworks */ = {isa = PBXBuildFile; productRef = ACDEF403307752300048F326 /* MPVPlayer */; };
 		ACEA9FEB298BFC8800FBA74B /* MovieModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACEA9FEA298BFC8800FBA74B /* MovieModel.swift */; };
-		AC168CC72E2B61440059B080 /* SwiftUIView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC168CC62E2B61440059B080 /* SwiftUIView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		8004D9212C4648AF001936E9 /* ImmersiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImmersiveView.swift; sourceTree = "<group>"; };
 		8004D9392C464F8D001936E9 /* SimplePlayer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SimplePlayer.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AC168CC62E2B61440059B080 /* SwiftUIView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIView.swift; sourceTree = "<group>"; };
 		AC43F6402A5172830026ECF2 /* FavoriteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoriteView.swift; sourceTree = "<group>"; };
 		AC43F6432A51916F0026ECF2 /* Model.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Model.xcdatamodel; sourceTree = "<group>"; };
 		AC43F6652A519D400026ECF2 /* Persistence.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Persistence.swift; sourceTree = "<group>"; };
@@ -46,7 +47,6 @@
 		ACD786482A6A8648004A0220 /* Defaults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Defaults.swift; sourceTree = "<group>"; };
 		ACE3619328EB689F00F234EB /* Player-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Player-Info.plist"; sourceTree = "<group>"; };
 		ACEA9FEA298BFC8800FBA74B /* MovieModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MovieModel.swift; sourceTree = "<group>"; };
-		AC168CC62E2B61440059B080 /* SwiftUIView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -71,20 +71,20 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		AC168CC52E2B61440059B080 /* APP2 */ = {
-			isa = PBXGroup;
-			children = (
-				AC168CC62E2B61440059B080 /* SwiftUIView.swift */,
-			);
-			path = APP2;
-			sourceTree = "<group>";
-		};
 		8004D9202C464899001936E9 /* Immersive */ = {
 			isa = PBXGroup;
 			children = (
 				8004D9212C4648AF001936E9 /* ImmersiveView.swift */,
 			);
 			path = Immersive;
+			sourceTree = "<group>";
+		};
+		AC168CC52E2B61440059B080 /* APP2 */ = {
+			isa = PBXGroup;
+			children = (
+				AC168CC62E2B61440059B080 /* SwiftUIView.swift */,
+			);
+			path = APP2;
 			sourceTree = "<group>";
 		};
 		AC77DFAA26402327001351AE = {
@@ -209,7 +209,7 @@
 			);
 			mainGroup = AC77DFAA26402327001351AE;
 			packageReferences = (
-				AC67EBA030767CC200642B68 /* XCLocalSwiftPackageReference "../.." */,
+				AC67EBA030767CC200642B68 /* XCRemoteSwiftPackageReference "file:///Users/chengshengru/Workspace/github/KSPlayer" */,
 			);
 			productRefGroup = AC77DFB826402329001351AE /* Products */;
 			projectDirPath = "";
@@ -284,7 +284,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 20102;
-				DEVELOPMENT_TEAM = 3RVHT92X9D;
+				DEVELOPMENT_TEAM = 32HB695N4M;
 				ENABLE_HARDENED_RUNTIME = YES;
 				"ENABLE_HARDENED_RUNTIME[sdk=macosx*]" = YES;
 				ENABLE_PREVIEWS = YES;
@@ -327,7 +327,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 20102;
-				DEVELOPMENT_TEAM = 3RVHT92X9D;
+				DEVELOPMENT_TEAM = 32HB695N4M;
 				ENABLE_HARDENED_RUNTIME = YES;
 				"ENABLE_HARDENED_RUNTIME[sdk=macosx*]" = YES;
 				ENABLE_PREVIEWS = YES;
@@ -502,7 +502,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 20102;
-				DEVELOPMENT_TEAM = 3RVHT92X9D;
+				DEVELOPMENT_TEAM = 32HB695N4M;
 				ENABLE_HARDENED_RUNTIME = YES;
 				"ENABLE_HARDENED_RUNTIME[sdk=macosx*]" = YES;
 				ENABLE_PREVIEWS = YES;
@@ -543,7 +543,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 20102;
-				DEVELOPMENT_TEAM = 3RVHT92X9D;
+				DEVELOPMENT_TEAM = 32HB695N4M;
 				ENABLE_HARDENED_RUNTIME = YES;
 				"ENABLE_HARDENED_RUNTIME[sdk=macosx*]" = YES;
 				ENABLE_PREVIEWS = YES;
@@ -605,32 +605,36 @@
 		};
 /* End XCConfigurationList section */
 
-/* Begin XCLocalSwiftPackageReference section */
-		AC67EBA030767CC200642B68 /* XCLocalSwiftPackageReference "../.." */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = ../..;
+/* Begin XCRemoteSwiftPackageReference section */
+		AC67EBA030767CC200642B68 /* XCRemoteSwiftPackageReference "file:///Users/chengshengru/Workspace/github/KSPlayer" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "file:///Users/chengshengru/Workspace/github/KSPlayer";
+			requirement = {
+				kind = branch;
+				branch = "trae/agent-0tsa5E";
+			};
 		};
-/* End XCLocalSwiftPackageReference section */
+/* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
 		AC67EBD53076B04300642B68 /* KSPlayerUI */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = AC67EBA030767CC200642B68 /* XCLocalSwiftPackageReference "../.." */;
+			package = AC67EBA030767CC200642B68 /* XCRemoteSwiftPackageReference "file:///Users/chengshengru/Workspace/github/KSPlayer" */;
 			productName = KSPlayerUI;
 		};
 		AC67EBD73076B04400642B68 /* MPVPlayer */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = AC67EBA030767CC200642B68 /* XCLocalSwiftPackageReference "../.." */;
+			package = AC67EBA030767CC200642B68 /* XCRemoteSwiftPackageReference "file:///Users/chengshengru/Workspace/github/KSPlayer" */;
 			productName = MPVPlayer;
 		};
 		ACDEF401307752300048F326 /* KSPlayerUI */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = AC67EBA030767CC200642B68 /* XCLocalSwiftPackageReference "../.." */;
+			package = AC67EBA030767CC200642B68 /* XCRemoteSwiftPackageReference "file:///Users/chengshengru/Workspace/github/KSPlayer" */;
 			productName = KSPlayerUI;
 		};
 		ACDEF403307752300048F326 /* MPVPlayer */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = AC67EBA030767CC200642B68 /* XCLocalSwiftPackageReference "../.." */;
+			package = AC67EBA030767CC200642B68 /* XCRemoteSwiftPackageReference "file:///Users/chengshengru/Workspace/github/KSPlayer" */;
 			productName = MPVPlayer;
 		};
 /* End XCSwiftPackageProductDependency section */
