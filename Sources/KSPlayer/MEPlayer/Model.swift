@@ -337,21 +337,14 @@ public final class AudioFrame: MEFrame {
         pcmBuffer.frameLength = pcmBuffer.frameCapacity
         for i in 0 ..< min(Int(pcmBuffer.format.channelCount), data.count) {
             switch audioFormat.commonFormat {
+            // Swift 5.7 适配:UnsafeMutablePointer.update(from:count:) 在 5.7 下对
+            // 可选链返回的指针重载解析失败,改用等价的 memcpy 按字节拷贝
             case .pcmFormatInt16:
-                let capacity = dataSize / MemoryLayout<Int16>.size
-                data[i]?.withMemoryRebound(to: Int16.self, capacity: capacity) { src in
-                    pcmBuffer.int16ChannelData?[i].update(from: src, count: capacity)
-                }
+                memcpy(pcmBuffer.int16ChannelData?[i], data[i], dataSize)
             case .pcmFormatInt32:
-                let capacity = dataSize / MemoryLayout<Int32>.size
-                data[i]?.withMemoryRebound(to: Int32.self, capacity: capacity) { src in
-                    pcmBuffer.int32ChannelData?[i].update(from: src, count: capacity)
-                }
+                memcpy(pcmBuffer.int32ChannelData?[i], data[i], dataSize)
             default:
-                let capacity = dataSize / MemoryLayout<Float>.size
-                data[i]?.withMemoryRebound(to: Float.self, capacity: capacity) { src in
-                    pcmBuffer.floatChannelData?[i].update(from: src, count: capacity)
-                }
+                memcpy(pcmBuffer.floatChannelData?[i], data[i], dataSize)
             }
         }
         return pcmBuffer
@@ -446,7 +439,13 @@ extension VideoVTBFrame {
         if var ambientViewingEnvironment = edrMetaData?.ambientViewingEnvironment {
             let data = Data(bytes: &ambientViewingEnvironment, count: MemoryLayout<AmbientViewingEnvironment>.stride)
             if #available(macOS 14.0, iOS 17.0, *) {
+                // Swift 5.7 适配:hlg(ambientViewingEnvironment:) 是 iOS 17 SDK 新增静态方法,
+                // Xcode 14.2(SDK 16.x)无该符号,低版本工具链回退到普通 hlg
+                #if compiler(>=5.9)
                 return CAEDRMetadata.hlg(ambientViewingEnvironment: data)
+                #else
+                return CAEDRMetadata.hlg
+                #endif
             } else {
                 return CAEDRMetadata.hlg
             }

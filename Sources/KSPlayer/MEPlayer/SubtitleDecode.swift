@@ -80,8 +80,8 @@ class SubtitleDecode: DecodeProtocol {
     func shutdown() {
         scale.shutdown()
         avsubtitle_free(&subtitle)
-        if let codecContext {
-            avcodec_close(codecContext)
+        // Swift 5.7 适配:FFmpeg 8 已移除 avcodec_close,avcodec_free_context 内部会完成关闭
+        if codecContext != nil {
             avcodec_free_context(&self.codecContext)
         }
     }

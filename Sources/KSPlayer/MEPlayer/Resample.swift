@@ -23,7 +23,9 @@ protocol FrameChange {
 }
 
 class VideoSwscale: FrameTransfer {
-    private var imgConvertCtx: OpaquePointer?
+    // Swift 5.7 适配:本地 FFmpegKit 9.x 的 libswscale 头文件仍导出 typed SwsContext,
+    // 属性类型与头文件签名保持一致(原 OpaquePointer 写法对应更早的 opaque 头)。
+    private var imgConvertCtx: UnsafeMutablePointer<SwsContext>?
     private var format: AVPixelFormat = AV_PIX_FMT_NONE
     private var height: Int32 = 0
     private var width: Int32 = 0
@@ -41,7 +43,7 @@ class VideoSwscale: FrameTransfer {
             outFrame = nil
         } else {
             let dstFormat = format.bestPixelFormat
-            imgConvertCtx = sws_getCachedContext(imgConvertCtx, width, height, self.format, width, height, dstFormat, SWS_BICUBIC, nil, nil, nil)
+            imgConvertCtx = sws_getCachedContext(imgConvertCtx, width, height, self.format, width, height, dstFormat, SWS_BICUBIC.rawValue, nil, nil, nil)
             outFrame = av_frame_alloc()
             outFrame?.pointee.format = dstFormat.rawValue
             outFrame?.pointee.width = width
@@ -65,7 +67,8 @@ class VideoSwscale: FrameTransfer {
 }
 
 class VideoSwresample: FrameChange {
-    private var imgConvertCtx: OpaquePointer?
+    // Swift 5.7 适配:与本地 FFmpegKit 9.x 头文件的 typed SwsContext 签名保持一致
+    private var imgConvertCtx: UnsafeMutablePointer<SwsContext>?
     private var format: AVPixelFormat = AV_PIX_FMT_NONE
     private var height: Int32 = 0
     private var width: Int32 = 0
@@ -112,7 +115,7 @@ class VideoSwresample: FrameChange {
             pixelFormatType = dstFormat.osType()!
 //            imgConvertCtx = sws_getContext(width, height, self.format, width, height, dstFormat, SWS_FAST_BILINEAR, nil, nil, nil)
             // AV_PIX_FMT_VIDEOTOOLBOX格式是无法进行swscale的
-            imgConvertCtx = sws_getCachedContext(imgConvertCtx, width, height, self.format, dstWidth, dstHeight, dstFormat, SWS_FAST_BILINEAR, nil, nil, nil)
+            imgConvertCtx = sws_getCachedContext(imgConvertCtx, width, height, self.format, dstWidth, dstHeight, dstFormat, SWS_FAST_BILINEAR.rawValue, nil, nil, nil)
         }
         pool = CVPixelBufferPool.create(width: dstWidth, height: dstHeight, bytesPerRowAlignment: linesize, pixelFormatType: pixelFormatType)
     }
@@ -148,7 +151,9 @@ class VideoSwresample: FrameChange {
         guard let pool else {
             return nil
         }
-        return autoreleasepool {
+        // Swift 5.7 适配:显式标注闭包返回类型,否则 guard 后 pbuf 被推断为非可选,
+        // 提前 return nil 报类型不兼容(新 SDK 下 CVPixelBuffer 为非可选类类型)
+        return autoreleasepool { () -> CVPixelBuffer? in
             var pbuf: CVPixelBuffer?
             let ret = CVPixelBufferPoolCreatePixelBuffer(kCFAllocatorDefault, pool, &pbuf)
             guard let pbuf, ret == kCVReturnSuccess else {

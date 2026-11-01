@@ -71,7 +71,7 @@ public class ThumbnailController {
         }
         var codecContext = try videoStream.pointee.codecpar.pointee.createContext(options: nil)
         defer {
-            avcodec_close(codecContext)
+            // Swift 5.7 适配:FFmpeg 8 已移除 avcodec_close,avcodec_free_context 内部会完成关闭
             var codecContext: UnsafeMutablePointer<AVCodecContext>? = codecContext
             avcodec_free_context(&codecContext)
         }
