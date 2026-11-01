@@ -62,9 +62,9 @@ class VideoToolboxDecode: DecodeProtocol {
                     }
                     return
                 }
-                let frame = VideoVTBFrame(fps: session.assetTrack.nominalFrameRate, isDovi: session.assetTrack.dovi != nil)
+                let frame = VideoVTBFrame(fps: self.session.assetTrack.nominalFrameRate, isDovi: self.session.assetTrack.dovi != nil)
                 frame.corePixelBuffer = imageBuffer
-                frame.timebase = session.assetTrack.timebase
+                frame.timebase = self.session.assetTrack.timebase
                 if packet.isKeyFrame, packetFlags & AV_PKT_FLAG_DISCARD != 0, self.lastPosition > 0 {
                     self.startTime = self.lastPosition - timestamp
                 }
