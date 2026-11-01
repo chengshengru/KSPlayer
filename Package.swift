@@ -100,9 +100,24 @@ if !FileManager.default.fileExists(atPath: ffmpegKitPath), let url = URL(string:
     }
 }
 
+// Xcode 14.2(Swift 5.7)兼容:当 KSPlayer 被 Xcode 以 file:// 方式克隆到
+// SourcePackages/checkouts 后,同级目录不存在 FFmpegKit,会走下面的回退分支。
+// 远端 GitHub 的 FFmpegKit 9.0.2 是 6.1 manifest,5.7 工具链无法解析,
+// 因此优先回退到本地 FFmpegKit 仓库(main 分支已提交 5.7 降级)。
+var localFFmpegKit = "/Users/chengshengru/Workspace/github/FFmpegKit"
+if !FileManager.default.fileExists(atPath: localFFmpegKit + "/Package.swift"),
+   let url = URL(string: #filePath) {
+    // 兜底:尝试相对本仓库的 ../FFmpegKit(应对换机器/换目录的场景)
+    localFFmpegKit = url.deletingLastPathComponent().path + "/../FFmpegKit"
+}
+
 if FileManager.default.fileExists(atPath: ffmpegKitPath + "/Package.swift") {
     package.dependencies += [
         .package(path: ffmpegKitPath),
+    ]
+} else if FileManager.default.fileExists(atPath: localFFmpegKit + "/Package.swift") {
+    package.dependencies += [
+        .package(url: "file://" + localFFmpegKit, branch: "main"),
     ]
 } else {
     package.dependencies += [
