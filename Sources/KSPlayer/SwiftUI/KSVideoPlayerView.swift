@@ -315,7 +315,11 @@ public struct KSVideoPlayerView: View {
 }
 
 extension View {
+    // Swift 5.7 适配:onKeyPress 是 iOS 17/macOS 14 的 SwiftUI API,
+    // Xcode 14.2(SDK 16.x)中符号不存在,且 if/else 返回不同视图类型依赖 SE-0370(5.9+);
+    // 低版本工具链下降级为不响应按键(仅保留焦点滚动等旧行为)。
     func onKeyPressLeftArrow(action: @escaping () -> Void) -> some View {
+        #if compiler(>=5.9)
         if #available(iOS 17.0, macOS 14.0, tvOS 17.0, *) {
             return onKeyPress(.leftArrow) {
                 action()
@@ -324,9 +328,13 @@ extension View {
         } else {
             return self
         }
+        #else
+        return self
+        #endif
     }
 
     func onKeyPressRightArrow(action: @escaping () -> Void) -> some View {
+        #if compiler(>=5.9)
         if #available(iOS 17.0, macOS 14.0, tvOS 17.0, *) {
             return onKeyPress(.rightArrow) {
                 action()
@@ -335,9 +343,13 @@ extension View {
         } else {
             return self
         }
+        #else
+        return self
+        #endif
     }
 
     func onKeyPressSapce(action: @escaping () -> Void) -> some View {
+        #if compiler(>=5.9)
         if #available(iOS 17.0, macOS 14.0, tvOS 17.0, *) {
             return onKeyPress(.space) {
                 action()
@@ -346,6 +358,9 @@ extension View {
         } else {
             return self
         }
+        #else
+        return self
+        #endif
     }
 }
 

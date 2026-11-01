@@ -39,23 +39,11 @@ class FFmpegDecode: DecodeProtocol {
             return
         }
 
-        // 需要avcodec_send_packet之后，properties的值才会变成FF_CODEC_PROPERTY_CLOSED_CAPTIONS
-        if packet.assetTrack.mediaType == .video {
-            if Int32(codecContext.pointee.properties) & FF_CODEC_PROPERTY_CLOSED_CAPTIONS != 0, packet.assetTrack.closedCaptionsTrack == nil {
-                var codecpar = AVCodecParameters()
-                codecpar.codec_type = AVMEDIA_TYPE_SUBTITLE
-                codecpar.codec_id = AV_CODEC_ID_EIA_608
-                if let subtitleAssetTrack = FFmpegAssetTrack(codecpar: codecpar) {
-                    subtitleAssetTrack.name = "Closed Captions"
-                    subtitleAssetTrack.startTime = packet.assetTrack.startTime
-                    subtitleAssetTrack.timebase = packet.assetTrack.timebase
-                    let subtitle = SyncPlayerItemTrack<SubtitleFrame>(mediaType: .subtitle, frameCapacity: 255, options: options)
-                    subtitleAssetTrack.subtitle = subtitle
-                    packet.assetTrack.closedCaptionsTrack = subtitleAssetTrack
-                    subtitle.decode()
-                }
-            }
-        }
+        // Swift 5.7 适配:FFmpeg 8(libavcodec 63)已移除 AVCodecContext.properties 字段与
+        // FF_CODEC_PROPERTY_CLOSED_CAPTIONS 宏,无法再据此自动创建 608 字幕轨,
+        // 本分支(本地 FFmpegKit 9.x)禁用该自动检测路径。
+        // 原逻辑:avcodec_send_packet 后 properties 含 FF_CODEC_PROPERTY_CLOSED_CAPTIONS 时,
+        // 自动追加 AV_CODEC_ID_EIA_608 字幕轨道。
 
         while true {
             let result = avcodec_receive_frame(codecContext, coreFrame)

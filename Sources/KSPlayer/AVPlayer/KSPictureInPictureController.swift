@@ -28,13 +28,13 @@ public class KSPictureInPictureController: AVPictureInPictureController {
         if restoreUserInterface {
             #if canImport(UIKit)
             runOnMainThread { [weak self] in
-                guard let self, let viewController, let originalViewController else { return }
+                guard let self, let self.viewController, let self.originalViewController else { return }
                 if let nav = viewController as? UINavigationController,
                    nav.viewControllers.isEmpty || (nav.viewControllers.count == 1 && nav.viewControllers[0] != originalViewController)
                 {
                     nav.viewControllers = [originalViewController]
                 }
-                if let navigationController {
+                if let self.navigationController {
                     var viewControllers = navigationController.viewControllers
                     if viewControllers.count > 1, let last = viewControllers.last, type(of: last) == type(of: viewController) {
                         viewControllers[viewControllers.count - 1] = viewController
@@ -45,7 +45,7 @@ public class KSPictureInPictureController: AVPictureInPictureController {
                         navigationController.pushViewController(viewController, animated: true)
                     }
                 } else {
-                    presentingViewController?.present(originalViewController, animated: true)
+                    self.presentingViewController?.present(originalViewController, animated: true)
                 }
             }
             #endif
@@ -74,18 +74,18 @@ public class KSPictureInPictureController: AVPictureInPictureController {
         runOnMainThread { [weak self] in
             guard let self, let viewController = view.player.view?.viewController else { return }
 
-            originalViewController = viewController
+            self.originalViewController = viewController
             if let navigationController = viewController.navigationController, navigationController.viewControllers.count == 1 {
                 self.viewController = navigationController
             } else {
                 self.viewController = viewController
             }
-            navigationController = self.viewController?.navigationController
+            self.navigationController = self.viewController?.navigationController
             if let pre = KSPictureInPictureController.pipController {
                 view.player.isMuted = true
                 pre.view?.isPipActive = false
             } else {
-                if let navigationController {
+                if let self.navigationController {
                     navigationController.popViewController(animated: true)
                     #if os(iOS)
                     if navigationController.tabBarController != nil, navigationController.viewControllers.count == 1 {
@@ -95,8 +95,8 @@ public class KSPictureInPictureController: AVPictureInPictureController {
                     }
                     #endif
                 } else {
-                    presentingViewController = originalViewController?.presentingViewController
-                    originalViewController?.dismiss(animated: true)
+                    self.presentingViewController = self.originalViewController?.presentingViewController
+                    self.originalViewController?.dismiss(animated: true)
                 }
             }
         }

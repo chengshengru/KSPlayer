@@ -32,7 +32,7 @@ public class KSMEPlayer: NSObject {
         willSet {
             runOnMainThread { [weak self] in
                 guard let self else { return }
-                delegate?.changeBuffering(player: self, progress: newValue)
+                self.delegate?.changeBuffering(player: self, progress: newValue)
             }
         }
     }
@@ -205,13 +205,13 @@ extension KSMEPlayer: MEPlayerDelegate {
         runOnMainThread { [weak self] in
             guard let self else { return }
             if let audioDescriptor {
-                KSLog("[audio] audio type: \(audioOutput) prepare audioFormat )")
-                audioOutput.prepare(audioFormat: audioDescriptor.audioFormat)
+                KSLog("[audio] audio type: \(self.audioOutput) prepare audioFormat )")
+                self.audioOutput.prepare(audioFormat: audioDescriptor.audioFormat)
             }
-            if let controlTimebase = videoOutput?.displayLayer.controlTimebase, options.startPlayTime > 1 {
-                CMTimebaseSetTime(controlTimebase, time: CMTimeMake(value: Int64(options.startPlayTime), timescale: 1))
+            if let controlTimebase = self.videoOutput?.displayLayer.controlTimebase, self.options.startPlayTime > 1 {
+                CMTimebaseSetTime(controlTimebase, time: CMTimeMake(value: Int64(self.options.startPlayTime), timescale: 1))
             }
-            delegate?.readyToPlay(player: self)
+            self.delegate?.readyToPlay(player: self)
         }
     }
 

@@ -221,8 +221,8 @@ open class KSPlayerLayer: NSObject {
         #if canImport(UIKit)
         runOnMainThread { [weak self] in
             guard let self else { return }
-            NotificationCenter.default.addObserver(self, selector: #selector(enterBackground), name: UIApplication.didEnterBackgroundNotification, object: nil)
-            NotificationCenter.default.addObserver(self, selector: #selector(enterForeground), name: UIApplication.willEnterForegroundNotification, object: nil)
+            NotificationCenter.default.addObserver(self, selector: #selector(self.enterBackground), name: UIApplication.didEnterBackgroundNotification, object: nil)
+            NotificationCenter.default.addObserver(self, selector: #selector(self.enterForeground), name: UIApplication.willEnterForegroundNotification, object: nil)
         }
         #if !os(xrOS)
         NotificationCenter.default.addObserver(self, selector: #selector(wirelessRouteActiveDidChange(notification:)), name: .MPVolumeViewWirelessRouteActiveDidChange, object: nil)
@@ -399,7 +399,7 @@ extension KSPlayerLayer: MediaPlayerDelegate {
             let diff = CACurrentMediaTime() - startTime
             runOnMainThread { [weak self] in
                 guard let self else { return }
-                delegate?.player(layer: self, bufferedCount: bufferedCount, consumeTime: diff)
+                self.delegate?.player(layer: self, bufferedCount: self.bufferedCount, consumeTime: diff)
             }
             if bufferedCount == 0 {
                 var dic = ["firstTime": diff]
@@ -454,7 +454,7 @@ extension KSPlayerLayer: MediaPlayerDelegate {
             let duration = player.duration
             runOnMainThread { [weak self] in
                 guard let self else { return }
-                delegate?.player(layer: self, currentTime: duration, totalTime: duration)
+                self.delegate?.player(layer: self, currentTime: duration, totalTime: duration)
             }
             state = .playedToTheEnd
         }
@@ -462,7 +462,7 @@ extension KSPlayerLayer: MediaPlayerDelegate {
         bufferedCount = 1
         runOnMainThread { [weak self] in
             guard let self else { return }
-            delegate?.player(layer: self, finish: error)
+            self.delegate?.player(layer: self, finish: error)
         }
         if error == nil {
             nextPlayer()
