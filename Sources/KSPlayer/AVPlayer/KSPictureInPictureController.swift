@@ -28,13 +28,13 @@ public class KSPictureInPictureController: AVPictureInPictureController {
         if restoreUserInterface {
             #if canImport(UIKit)
             runOnMainThread { [weak self] in
-                guard let self, let self.viewController, let self.originalViewController else { return }
+                guard let self, let viewController = self.viewController, let originalViewController = self.originalViewController else { return }
                 if let nav = viewController as? UINavigationController,
                    nav.viewControllers.isEmpty || (nav.viewControllers.count == 1 && nav.viewControllers[0] != originalViewController)
                 {
                     nav.viewControllers = [originalViewController]
                 }
-                if let self.navigationController {
+                if let navigationController = self.navigationController {
                     var viewControllers = navigationController.viewControllers
                     if viewControllers.count > 1, let last = viewControllers.last, type(of: last) == type(of: viewController) {
                         viewControllers[viewControllers.count - 1] = viewController
@@ -85,7 +85,7 @@ public class KSPictureInPictureController: AVPictureInPictureController {
                 view.player.isMuted = true
                 pre.view?.isPipActive = false
             } else {
-                if let self.navigationController {
+                if let navigationController = self.navigationController {
                     navigationController.popViewController(animated: true)
                     #if os(iOS)
                     if navigationController.tabBarController != nil, navigationController.viewControllers.count == 1 {
