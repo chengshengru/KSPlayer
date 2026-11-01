@@ -13,12 +13,15 @@ import UserNotifications
 
 @main
 struct TracyApp: App {
+    // Swift 5.7 适配:属性与声明被 #if 分割的写法在 5.7 解析器中报 expected declaration,
+    // 需将完整声明放入各分支
     #if os(macOS)
     @NSApplicationDelegateAdaptor
+    private var appDelegate: AppDelegate
     #else
     @UIApplicationDelegateAdaptor
-    #endif
     private var appDelegate: AppDelegate
+    #endif
     private let appModel = APPModel()
     init() {
         let arguments = ProcessInfo.processInfo.arguments.dropFirst()

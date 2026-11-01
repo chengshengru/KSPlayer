@@ -1,0 +1,14 @@
+{
+  "pins" : [
+    {
+      "identity" : "ffmpegkit",
+      "kind" : "localSourceControl",
+      "location" : "/Users/chengshengru/Workspace/github/FFmpegKit",
+      "state" : {
+        "branch" : "main",
+        "revision" : "d9aa5f7c4f262aa25ddebc4a50326f0d24050a20"
+      }
+    }
+  ],
+  "version" : 2
+}
