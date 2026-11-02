@@ -13,7 +13,11 @@ struct ContentView: View {
         // Xcode 14.2 本地适配:NavigationSplitView 为 macOS 13 API,降级为 NavigationView 双栏;
         // 播放窗口(openWindow)以 sheet 呈现替代
         NavigationView {
-            List(selection: $appModel.tabSelected) {
+            // Xcode 14.2 本地适配:非可选 selection 绑定为 macOS 13 API,改用可选绑定
+            List(selection: Binding<TabBarItem?>(
+                get: { appModel.tabSelected },
+                set: { if let value = $0 { appModel.tabSelected = value } }
+            )) {
                 link(to: .Home)
                 link(to: .Favorite)
                 link(to: .Files)
@@ -99,6 +103,7 @@ struct ContentView: View {
         item.lable.tag(item)
     }
 
+    #if !os(macOS)
     func tab(to item: TabBarItem) -> some View {
         Group {
             if item == .Home {
@@ -115,6 +120,7 @@ struct ContentView: View {
             item.lable.tag(item)
         }.tag(item)
     }
+    #endif
 }
 
 enum TabBarItem: Int {

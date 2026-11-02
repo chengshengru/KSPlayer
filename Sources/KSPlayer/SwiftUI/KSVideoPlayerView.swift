@@ -336,6 +336,24 @@ extension View {
         #endif
     }
 
+    /// Xcode 14.2 本地适配:View.italic(_:) 为 iOS 16/macOS 13 API,macOS 12 降级为不处理
+    @ViewBuilder
+    func italicIfSupported(_ flag: Bool) -> some View {
+        #if os(macOS)
+        if #available(macOS 13.0, *) {
+            self.italic(flag)
+        } else {
+            self
+        }
+        #else
+        if #available(iOS 16.0, tvOS 16.0, *) {
+            self.italic(flag)
+        } else {
+            self
+        }
+        #endif
+    }
+
     // Swift 5.7 适配:onKeyPress 是 iOS 17/macOS 14 的 SwiftUI API,
     // Xcode 14.2(SDK 16.x)中符号不存在,且 if/else 返回不同视图类型依赖 SE-0370(5.9+);
     // 低版本工具链下降级为不响应按键(仅保留焦点滚动等旧行为)。
@@ -656,13 +674,14 @@ struct VideoSubtitleView: View {
 
 private extension SubtitlePart {
     /// Text(AttributedString) 为 iOS 16/macOS 13 API,macOS 12 降级为纯文本
+    @available(iOS 16.0, tvOS 16.0, macOS 12.0, *)
     @ViewBuilder
-    static func subtitleText(_ text: String) -> some View {
+    static func subtitleText(_ text: NSAttributedString) -> some View {
         #if os(macOS)
         if #available(macOS 13.0, *) {
             Text(AttributedString(text))
         } else {
-            Text(text)
+            Text(text.string)
         }
         #else
         Text(AttributedString(text))
@@ -693,7 +712,7 @@ private extension SubtitlePart {
                     .font(Font(SubtitleModel.textFont))
                     .shadow(color: .black.opacity(0.9), radius: 1, x: 1, y: 1)
                     .foregroundColor(SubtitleModel.textColor)
-                    .italic(SubtitleModel.textItalic)
+                    .italicIfSupported(SubtitleModel.textItalic)
                     .background(SubtitleModel.textBackgroundColor)
                     .multilineTextAlignment(.center)
                     .alignmentGuide(textPosition.horizontalAlign) {
