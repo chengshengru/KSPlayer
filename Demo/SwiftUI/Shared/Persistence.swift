@@ -5,7 +5,6 @@
 //  Created by kintan on 2023/7/2.
 //
 
-import CloudKit
 import CoreData
 import KSPlayer
 
@@ -48,7 +47,9 @@ struct PersistenceController {
         return result
     }()
 
-    let container: NSPersistentCloudKitContainer
+    // Xcode 14.2 本地适配:个人开发者团队不支持 iCloud 能力,无法创建含 CloudKit 的
+    // 描述文件,故改用普通 NSPersistentContainer(仅本地持久化,放弃云同步)
+    let container: NSPersistentContainer
     let viewContext: NSManagedObjectContext
     init(inMemory: Bool = false) {
         let modelName = "Model"
@@ -58,7 +59,7 @@ struct PersistenceController {
         else {
             fatalError("Can't get \(modelName).momd in Bundle")
         }
-        container = NSPersistentCloudKitContainer(name: modelName, managedObjectModel: model)
+        container = NSPersistentContainer(name: modelName, managedObjectModel: model)
         viewContext = container.viewContext
         if inMemory {
             container.persistentStoreDescriptions.first!.url = URL(fileURLWithPath: "/dev/null")

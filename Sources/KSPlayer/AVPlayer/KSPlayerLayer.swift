@@ -360,7 +360,8 @@ extension KSPlayerLayer: MediaPlayerDelegate {
             guard let self else { return }
             if let window = player.view?.window {
                 window.isMovableByWindowBackground = true
-                if options.automaticWindowResize {
+                // Swift 5.7 适配:SE-0367(guard let self 隐式 self)为 5.8+,5.7 需显式 self
+                if self.options.automaticWindowResize {
                     let naturalSize = player.naturalSize
                     if naturalSize.width > 0, naturalSize.height > 0 {
                         window.aspectRatio = naturalSize
