@@ -11,7 +11,7 @@ struct ContentView: View {
     private var initialView: some View {
         #if os(macOS)
         // Xcode 14.2 本地适配:NavigationSplitView 为 macOS 13 API,降级为 NavigationView 双栏;
-        // 播放窗口(openWindow)以 sheet 呈现替代
+        // 播放窗口(openWindow)改为全屏 overlay 内嵌(macOS 12 的 sheet + NSViewRepresentable 不显示)
         NavigationView {
             // Xcode 14.2 本地适配:非可选 selection 绑定为 macOS 13 API,改用可选绑定
             List(selection: Binding<TabBarItem?>(
@@ -24,13 +24,23 @@ struct ContentView: View {
             }
             .frame(minWidth: 180)
             appModel.tabSelected.destination(appModel: appModel)
-                .sheet(item: $appModel.playbackItem) { item in
+        }
+        .overlay {
+            // 播放项存在时以全屏 overlay 覆盖主窗口,ESC 或"返回"退出播放
+            if let item = appModel.playbackItem {
+                ZStack(alignment: .topLeading) {
                     if let model = item.model {
                         KSVideoPlayerView(model: model)
                     } else if let url = item.url {
                         KSVideoPlayerView(url: url)
                     }
+                    Button("返回") {
+                        appModel.playbackItem = nil
+                    }
+                    .keyboardShortcut(.cancelAction)
+                    .padding()
                 }
+            }
         }
         #else
         TabView(selection: $appModel.tabSelected) {
