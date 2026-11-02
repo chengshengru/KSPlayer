@@ -8,7 +8,8 @@ import AVFoundation
 import MediaPlayer
 import SwiftUI
 
-@available(iOS 16.0, macOS 13.0, tvOS 16.0, *)
+// Xcode 14.2 本地适配:macOS 最低可用版本从 13.0 降至 12.0(内部 macOS 13 API 均以 #available 门控降级)
+@available(iOS 16.0, macOS 12.0, tvOS 16.0, *)
 @MainActor
 public struct KSVideoPlayerView: View {
     private let subtitleDataSouce: SubtitleDataSouce?
@@ -83,8 +84,7 @@ public struct KSVideoPlayerView: View {
         }
         .preferredColorScheme(.dark)
         .tint(.white)
-        .persistentSystemOverlays(.hidden)
-        .toolbar(.hidden, for: .automatic)
+        .hideSystemOverlays()
         #if os(tvOS)
             .onPlayPauseCommand {
                 if playerCoordinator.state.isPlaying {
@@ -315,6 +315,27 @@ public struct KSVideoPlayerView: View {
 }
 
 extension View {
+    /// Xcode 14.2 本地适配:隐藏系统浮层与工具栏为 iOS 16/macOS 13 API,
+    /// macOS 12 降级为不做处理(其余平台行为不变)
+    @ViewBuilder
+    func hideSystemOverlays() -> some View {
+        #if os(macOS)
+        if #available(macOS 13.0, *) {
+            self.persistentSystemOverlays(.hidden)
+                .toolbar(.hidden, for: .automatic)
+        } else {
+            self
+        }
+        #else
+        if #available(iOS 16.0, tvOS 16.0, *) {
+            self.persistentSystemOverlays(.hidden)
+                .toolbar(.hidden, for: .automatic)
+        } else {
+            self
+        }
+        #endif
+    }
+
     // Swift 5.7 适配:onKeyPress 是 iOS 17/macOS 14 的 SwiftUI API,
     // Xcode 14.2(SDK 16.x)中符号不存在,且 if/else 返回不同视图类型依赖 SE-0370(5.9+);
     // 低版本工具链下降级为不响应按键(仅保留焦点滚动等旧行为)。
@@ -364,7 +385,7 @@ extension View {
     }
 }
 
-@available(iOS 16, tvOS 16, macOS 13, *)
+@available(iOS 16, tvOS 16, macOS 12, *)
 struct VideoControllerView: View {
     @ObservedObject
     fileprivate var config: KSVideoPlayer.Coordinator
@@ -541,7 +562,8 @@ public struct MenuView<Label, SelectionValue, Content>: View where Label: View, 
     @State
     private var showMenu = false
     public var body: some View {
-        if #available(tvOS 17, *) {
+        // macOS 13 才有 menuIndicator(.hidden),故 macOS 分支单独门控,低版本走 Picker
+        if #available(tvOS 17, macOS 13, *) {
             Menu {
                 Picker(selection: selection) {
                     content()
@@ -605,7 +627,7 @@ extension EventModifiers {
     static let none = Self()
 }
 
-@available(iOS 16, tvOS 16, macOS 13, *)
+@available(iOS 16, tvOS 16, macOS 12, *)
 struct VideoSubtitleView: View {
     @ObservedObject
     fileprivate var model: SubtitleModel
@@ -633,7 +655,21 @@ struct VideoSubtitleView: View {
 }
 
 private extension SubtitlePart {
-    @available(iOS 16, tvOS 16, macOS 13, *)
+    /// Text(AttributedString) 为 iOS 16/macOS 13 API,macOS 12 降级为纯文本
+    @ViewBuilder
+    static func subtitleText(_ text: String) -> some View {
+        #if os(macOS)
+        if #available(macOS 13.0, *) {
+            Text(AttributedString(text))
+        } else {
+            Text(text)
+        }
+        #else
+        Text(AttributedString(text))
+        #endif
+    }
+
+    @available(iOS 16, tvOS 16, macOS 12, *)
     @MainActor
     var subtitleView: some View {
         VStack {
@@ -653,7 +689,7 @@ private extension SubtitlePart {
                 if textPosition.verticalAlign == .bottom || textPosition.verticalAlign == .center {
                     Spacer()
                 }
-                Text(AttributedString(text))
+                SubtitlePart.subtitleText(text)
                     .font(Font(SubtitleModel.textFont))
                     .shadow(color: .black.opacity(0.9), radius: 1, x: 1, y: 1)
                     .foregroundColor(SubtitleModel.textColor)
@@ -678,7 +714,7 @@ private extension SubtitlePart {
     }
 }
 
-@available(iOS 16, tvOS 16, macOS 13, *)
+@available(iOS 16, tvOS 16, macOS 12, *)
 struct VideoSettingView: View {
     @ObservedObject
     fileprivate var config: KSVideoPlayer.Coordinator
@@ -706,19 +742,19 @@ struct VideoSettingView: View {
                 } label: {
                     Label("Video Track", systemImage: "video.fill")
                 }
-                LabeledContent("Video Type", value: (videoTracks.first { $0.isEnabled }?.dynamicRange ?? .sdr).description)
+                LabeledContentRow(title: "Video Type", value: Text((videoTracks.first { $0.isEnabled }?.dynamicRange ?? .sdr).description))
             }
             TextField("Sutitle delay", value: $subtitleModel.subtitleDelay, format: .number)
             TextField("Title", text: $subtitleTitle)
             Button("Search Sutitle") {
                 subtitleModel.searchSubtitle(query: subtitleTitle, languages: ["zh-cn"])
             }
-            LabeledContent("Stream Type", value: (videoTracks?.first { $0.isEnabled }?.fieldOrder ?? .progressive).description)
+            LabeledContentRow(title: "Stream Type", value: Text((videoTracks?.first { $0.isEnabled }?.fieldOrder ?? .progressive).description))
             if let dynamicInfo = config.playerLayer?.player.dynamicInfo {
                 DynamicInfoView(dynamicInfo: dynamicInfo)
             }
             if let fileSize = config.playerLayer?.player.fileSize, fileSize > 0 {
-                LabeledContent("File Size", value: fileSize.kmFormatted + "B")
+                LabeledContentRow(title: "File Size", value: Text(fileSize.kmFormatted + "B"))
             }
         }
         #if os(macOS) || targetEnvironment(macCatalyst) || os(xrOS)
@@ -732,17 +768,35 @@ struct VideoSettingView: View {
     }
 }
 
-@available(iOS 16, tvOS 16, macOS 13, *)
+@available(iOS 16, tvOS 16, macOS 12, *)
 public struct DynamicInfoView: View {
     @ObservedObject
     fileprivate var dynamicInfo: DynamicInfo
     public var body: some View {
-        LabeledContent("Display FPS", value: dynamicInfo.displayFPS, format: .number)
-        LabeledContent("Audio Video sync", value: dynamicInfo.audioVideoSyncDiff, format: .number)
-        LabeledContent("Dropped Frames", value: dynamicInfo.droppedVideoFrameCount + dynamicInfo.droppedVideoPacketCount, format: .number)
-        LabeledContent("Bytes Read", value: dynamicInfo.bytesRead.kmFormatted + "B")
-        LabeledContent("Audio bitrate", value: dynamicInfo.audioBitrate.kmFormatted + "bps")
-        LabeledContent("Video bitrate", value: dynamicInfo.videoBitrate.kmFormatted + "bps")
+        LabeledContentRow(title: "Display FPS", value: Text(dynamicInfo.displayFPS, format: .number))
+        LabeledContentRow(title: "Audio Video sync", value: Text(dynamicInfo.audioVideoSyncDiff, format: .number))
+        LabeledContentRow(title: "Dropped Frames", value: Text(dynamicInfo.droppedVideoFrameCount + dynamicInfo.droppedVideoPacketCount, format: .number))
+        LabeledContentRow(title: "Bytes Read", value: Text(dynamicInfo.bytesRead.kmFormatted + "B"))
+        LabeledContentRow(title: "Audio bitrate", value: Text(dynamicInfo.audioBitrate.kmFormatted + "bps"))
+        LabeledContentRow(title: "Video bitrate", value: Text(dynamicInfo.videoBitrate.kmFormatted + "bps"))
+    }
+}
+
+/// LabeledContent 为 iOS 16/macOS 13 API;macOS 统一降级为 HStack 行,保证 macOS 12 可用
+@available(iOS 16.0, tvOS 16.0, macOS 12.0, *)
+struct LabeledContentRow: View {
+    let title: String
+    let value: Text
+    var body: some View {
+        #if os(macOS)
+        HStack {
+            Text(title)
+            Spacer()
+            value
+        }
+        #else
+        LabeledContent(title) { value }
+        #endif
     }
 }
 

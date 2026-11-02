@@ -7,7 +7,8 @@
 
 import SwiftUI
 
-@available(iOS 16.0, macOS 13.0, tvOS 16.0, *)
+// Xcode 14.2 本地适配:macOS 最低可用版本降至 12.0(内部无 macOS 13 专属 API)
+@available(iOS 16.0, macOS 12.0, tvOS 16.0, *)
 enum KSVideoPlayerViewBuilder {
     @MainActor
     static func playbackControlView(config: KSVideoPlayer.Coordinator, spacing: CGFloat? = nil) -> some View {
@@ -105,7 +106,7 @@ enum KSVideoPlayerViewBuilder {
     }
 }
 
-@available(iOS 16.0, macOS 13.0, tvOS 16.0, *)
+@available(iOS 16.0, macOS 12.0, tvOS 16.0, *)
 private extension KSVideoPlayerViewBuilder {
     static var playSystemName: String {
         #if os(xrOS)

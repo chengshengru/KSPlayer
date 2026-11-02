@@ -73,29 +73,20 @@ struct TracyApp: App {
             }
         }
         #endif
-        #if os(macOS)
-        .defaultSize(width: 1120, height: 630)
-        .defaultPosition(.center)
-        #endif
-        #if !os(tvOS)
+        // Xcode 14.2 本地适配:defaultSize/defaultPosition 为 macOS 13 API,macOS 12 下去除
+        // Xcode 14.2 本地适配:WindowGroup(_:for:) 值窗口与 openWindow 为 macOS 13 API,
+        // macOS 12 改为单窗口 + sheet 播放(见 ContentView)
+        #if !os(macOS) && !os(tvOS)
         WindowGroup("player", for: URL.self) { $url in
             if let url {
                 KSVideoPlayerView(url: url)
             }
         }
-        #if os(macOS)
-        .defaultPosition(.center)
-        #endif
-        #endif
-        #if !os(tvOS)
         WindowGroup("player", for: MovieModel.self) { $model in
             if let model {
                 KSVideoPlayerView(model: model)
             }
         }
-        #if os(macOS)
-        .defaultPosition(.center)
-        #endif
         #endif
         #if os(macOS)
         Settings {
@@ -154,8 +145,16 @@ class APPModel: ObservableObject {
     var openPlayModel: MovieModel?
     @Published
     var tabSelected: TabBarItem = .Home
+    #if !os(macOS)
+    // Xcode 14.2 本地适配:NavigationPath 为 macOS 13 API,macOS 12 播放改由 sheet 承载,不需要导航路径
     @Published
     var path = NavigationPath()
+    #endif
+    #if os(macOS)
+    /// macOS 12 播放项:以 sheet 呈现,替代 macOS 13 的 openWindow 多窗口
+    @Published
+    var playbackItem: PlaybackItem?
+    #endif
     @Published
     var openFileImport = false
     @Published
@@ -246,6 +245,15 @@ class APPModel: ObservableObject {
         #endif
     }
 }
+
+#if os(macOS)
+/// macOS 12 以 sheet 呈现的播放项(url 或已存在的 MovieModel 二选一)
+struct PlaybackItem: Identifiable {
+    let id = UUID()
+    let url: URL?
+    let model: MovieModel?
+}
+#endif
 
 struct KSVideoPlayerView_Previews: PreviewProvider {
     static var previews: some View {

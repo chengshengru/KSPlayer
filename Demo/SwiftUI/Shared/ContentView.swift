@@ -2,21 +2,31 @@ import KSPlayer
 import SwiftUI
 
 struct ContentView: View {
-    #if !os(tvOS)
+    #if !os(macOS) && !os(tvOS)
+    // Xcode 14.2 本地适配:openWindow 为 macOS 13 API,macOS 12 改用 sheet 播放
     @Environment(\.openWindow) private var openWindow
     #endif
     @EnvironmentObject
     private var appModel: APPModel
     private var initialView: some View {
         #if os(macOS)
-        NavigationSplitView {
+        // Xcode 14.2 本地适配:NavigationSplitView 为 macOS 13 API,降级为 NavigationView 双栏;
+        // 播放窗口(openWindow)以 sheet 呈现替代
+        NavigationView {
             List(selection: $appModel.tabSelected) {
                 link(to: .Home)
                 link(to: .Favorite)
                 link(to: .Files)
             }
-        } detail: {
+            .frame(minWidth: 180)
             appModel.tabSelected.destination(appModel: appModel)
+                .sheet(item: $appModel.playbackItem) { item in
+                    if let model = item.model {
+                        KSVideoPlayerView(model: model)
+                    } else if let url = item.url {
+                        KSVideoPlayerView(url: url)
+                    }
+                }
         }
         #else
         TabView(selection: $appModel.tabSelected) {
@@ -37,7 +47,9 @@ struct ContentView: View {
             }
             .onChange(of: appModel.openURL) { url in
                 if let url {
-                    #if !os(tvOS)
+                    #if os(macOS)
+                    appModel.playbackItem = PlaybackItem(url: url, model: nil)
+                    #else
                     openWindow(value: url)
                     #endif
                     appModel.openURL = nil
@@ -45,7 +57,9 @@ struct ContentView: View {
             }
             .onChange(of: appModel.openPlayModel) { model in
                 if let model {
-                    #if !os(tvOS)
+                    #if os(macOS)
+                    appModel.playbackItem = PlaybackItem(url: nil, model: model)
+                    #else
                     openWindow(value: model)
                     #endif
                     appModel.openPlayModel = nil
@@ -143,6 +157,11 @@ public extension View {
     @MainActor
     @ViewBuilder
     func navigationPlay() -> some View {
+        #if os(macOS)
+        // Xcode 14.2 本地适配:navigationDestination(for:) 为 macOS 13 API,
+        // macOS 12 播放统一由 initialView 中的 sheet 承载
+        self
+        #else
         navigationDestination(for: URL.self) { url in
             KSVideoPlayerView(url: url)
             #if !os(macOS)
@@ -152,9 +171,11 @@ public extension View {
         .navigationDestination(for: MovieModel.self) { model in
             model.view
         }
+        #endif
     }
 }
 
+#if !os(macOS)
 private extension MovieModel {
     @MainActor
     var view: some View {
@@ -164,3 +185,4 @@ private extension MovieModel {
         #endif
     }
 }
+#endif
