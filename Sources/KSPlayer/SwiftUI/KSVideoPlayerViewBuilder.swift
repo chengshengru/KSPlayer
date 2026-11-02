@@ -69,8 +69,22 @@ enum KSVideoPlayerViewBuilder {
                 Text(text).tag(value)
             }
         } label: {
-            Image(systemName: "gauge.with.dots.needle.67percent")
+            Image(systemName: playbackRateSystemName)
         }
+    }
+
+    /// Xcode 14.2 本地适配:gauge.with.dots.needle.67percent 为 SF Symbols 4(macOS 13+)符号,
+    /// macOS 12 降级为 speedometer(全平台可用)
+    static var playbackRateSystemName: String {
+        #if os(macOS)
+        if #available(macOS 13.0, *) {
+            return "gauge.with.dots.needle.67percent"
+        } else {
+            return "speedometer"
+        }
+        #else
+        return "gauge.with.dots.needle.67percent"
+        #endif
     }
 
     @MainActor
