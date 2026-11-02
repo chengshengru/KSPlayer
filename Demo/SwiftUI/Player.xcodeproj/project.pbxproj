@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 54;
+	objectVersion = 53;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -154,12 +154,12 @@
 				Base,
 			);
 			mainGroup = AC77DFAA26402327001351AE;
-			productRefGroup = AC77DFB826402329001351AE /* Products */;
-			projectDirPath = "";
-			projectRoot = "";
 			packageReferences = (
 				AC67EBA030767CC200642B68 /* XCRemoteSwiftPackageReference "KSPlayer" */,
 			);
+			productRefGroup = AC77DFB826402329001351AE /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
 			targets = (
 				AC77DFB626402329001351AE /* Player */,
 			);
@@ -342,7 +342,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 20102;
-				DEVELOPMENT_TEAM = 3RVHT92X9D;
+				DEVELOPMENT_TEAM = 32HB695N4M;
 				ENABLE_HARDENED_RUNTIME = YES;
 				"ENABLE_HARDENED_RUNTIME[sdk=macosx*]" = YES;
 				ENABLE_PREVIEWS = YES;
@@ -384,7 +384,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 20102;
-				DEVELOPMENT_TEAM = 3RVHT92X9D;
+				DEVELOPMENT_TEAM = 32HB695N4M;
 				ENABLE_HARDENED_RUNTIME = YES;
 				"ENABLE_HARDENED_RUNTIME[sdk=macosx*]" = YES;
 				ENABLE_PREVIEWS = YES;
@@ -438,6 +438,17 @@
 		};
 /* End XCConfigurationList section */
 
+/* Begin XCRemoteSwiftPackageReference section */
+		AC67EBA030767CC200642B68 /* XCRemoteSwiftPackageReference "KSPlayer" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "file:///Users/chengshengru/Workspace/github/KSPlayer";
+			requirement = {
+				branch = "trae/agent-0tsa5E";
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
 /* Begin XCSwiftPackageProductDependency section */
 		ACD2F771275F735C0006D16F /* KSPlayer */ = {
 			isa = XCSwiftPackageProductDependency;
@@ -445,17 +456,6 @@
 			productName = KSPlayer;
 		};
 /* End XCSwiftPackageProductDependency section */
-
-/* Begin XCRemoteSwiftPackageReference section */
-		AC67EBA030767CC200642B68 /* XCRemoteSwiftPackageReference "KSPlayer" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "file:///Users/chengshengru/Workspace/github/KSPlayer";
-			requirement = {
-				kind = branch;
-				branch = "trae/agent-0tsa5E";
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCVersionGroup section */
 		AC43F6422A51916F0026ECF2 /* Model.xcdatamodeld */ = {
