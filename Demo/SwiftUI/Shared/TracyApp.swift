@@ -195,7 +195,9 @@ class APPModel: ObservableObject {
         }
         KSOptions.logger = FileLog(fileHandle: fileHandle)
         #endif
-//        KSOptions.firstPlayerType = KSMEPlayer.self
+        // Xcode 14.2 本地适配:macOS 12 上 KSAVPlayer(AVPlayerLayer)黑屏排查,
+        // 首选改用 KSPlayer 自研解码+Metal 渲染管线,绕开 AVPlayer
+        KSOptions.firstPlayerType = KSMEPlayer.self
         KSOptions.secondPlayerType = KSMEPlayer.self
         _ = Defaults.shared
         KSOptions.subtitleDataSouces = [DirectorySubtitleDataSouce(), ShooterSubtitleDataSouce(), AssrtSubtitleDataSouce(token: "5IzWrb2J099vmA96ECQXwdRSe9xdoBUv"), OpenSubtitleDataSouce(apiKey: "0D0gt8nV6SFHVVejdxAMpvOT0wByfKE5")]
