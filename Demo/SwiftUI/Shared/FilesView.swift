@@ -100,12 +100,12 @@ struct M3UView: View {
                 .foregroundColor(.secondary)
         }
         .contextMenu {
-            if PersistenceController.shared.container.canUpdateRecord(forManagedObjectWith: model.objectID) {
-                Button {
-                    model.delete()
-                } label: {
-                    Label("Delete", systemImage: "trash.fill")
-                }
+            // Xcode 14.2 本地适配:canUpdateRecord 为 NSPersistentCloudKitContainer 专属 API,
+            // 改用本地 NSPersistentContainer 后记录恒可删除,直接显示删除按钮
+            Button {
+                model.delete()
+            } label: {
+                Label("Delete", systemImage: "trash.fill")
             }
             Button {
                 Task {
