@@ -346,10 +346,7 @@ extension KSMPVPlayer: AVPlaybackCoordinatorPlaybackControlDelegate {
     }
 
     public func playbackCoordinator(_: AVDelegatingPlaybackCoordinator, didIssue bufferingCommand: AVDelegatingPlaybackCoordinatorBufferingCommand) async {
-        guard await bufferingCommand.expectedCurrentItemIdentifier == (playbackCoordinator as? AVDelegatingPlaybackCoordinator)?.currentItemIdentifier else {
-            return
-        }
-        guard loadState != .playable, let countDown = bufferingCommand.completionDueDate?.timeIntervalSinceNow else {
+        guard await bufferingCommand.expectedCurrentItemIdentifier == (playbackCoordinator as? AVDelegatingPlaybackCoordinator)?.currentItemIdentifier, loadState != .playable, let countDown = bufferingCommand.completionDueDate?.timeIntervalSinceNow else {
             return
         }
         try? await Task.sleep(nanoseconds: UInt64(countDown * 1_000_000_000))
@@ -432,7 +429,7 @@ public final class MPVTrack: MediaPlayerTrack, SubtitleInfo, @unchecked Sendable
         self.description = description
     }
 
-    public func search(with _: KSPlayer.KSSubtitleQuery) async -> [KSPlayer.SubtitlePart] {
+    public func search(with _: KSPlayer.KSSubtitleQuery) -> [KSPlayer.SubtitlePart] {
         []
     }
 }

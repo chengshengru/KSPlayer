@@ -48,8 +48,8 @@ extension UIMenu {
 }
 
 #if !os(tvOS)
+@available(iOS 14.0, *)
 extension UIButton {
-    @available(iOS 14.0, *)
     func setMenu<U>(title: String, current: U?, list: [U], addDisabled: Bool = false, titleFunc: (U) -> String, completion handler: @escaping (U?) -> Void) {
         menu = UIMenu(title: title, current: current, list: list, addDisabled: addDisabled, titleFunc: titleFunc) { [weak self] title, value in
             guard let self else { return }

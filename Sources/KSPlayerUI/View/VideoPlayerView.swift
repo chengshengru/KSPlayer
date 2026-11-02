@@ -6,14 +6,14 @@
 //
 //
 import AVKit
+import Combine
+import KSPlayer
+import MediaPlayer
 #if canImport(UIKit)
 import UIKit
 #else
 import AppKit
 #endif
-import Combine
-import KSPlayer
-import MediaPlayer
 
 /// internal enum to check the pan direction
 public enum KSPanDirection {
@@ -148,17 +148,13 @@ open class VideoPlayerView: PlayerView {
     override open func onButtonPressed(type: PlayerButtonType, button: UIButton) {
         autoFadeOutViewWithAnimation()
         super.onButtonPressed(type: type, button: button)
-        if type == .pictureInPicture {
-            if #available(tvOS 14.0, *) {
-                if let playerLayer = playerLayer as? KSComplexPlayerLayer {
-                    if playerLayer.isPictureInPictureActive {
-                        playerLayer.pipStop(restoreUserInterface: true)
-                        button.isSelected = false
-                    } else {
-                        playerLayer.pipStart()
-                        button.isSelected = true
-                    }
-                }
+        if type == .pictureInPicture, #available(tvOS 14.0, *), let playerLayer = playerLayer as? KSComplexPlayerLayer {
+            if playerLayer.isPictureInPictureActive {
+                playerLayer.pipStop(restoreUserInterface: true)
+                button.isSelected = false
+            } else {
+                playerLayer.pipStart()
+                button.isSelected = true
             }
         }
         #if os(tvOS)
@@ -279,6 +275,8 @@ open class VideoPlayerView: PlayerView {
             }
         case .initialized, .preparing:
             break
+        @unknown default:
+            break
         }
     }
 
@@ -346,11 +344,11 @@ open class VideoPlayerView: PlayerView {
     }
 
     open func panGestureBegan(location _: CGPoint, direction: KSPanDirection) {
-        if direction == .horizontal {
-            // 给tmpPanValue初值
-            if totalTime > 0 {
-                tmpPanValue = toolBar.timeSlider.value
-            }
+        if direction == .horizontal,
+           // 给tmpPanValue初值
+           totalTime > 0
+        {
+            tmpPanValue = toolBar.timeSlider.value
         }
     }
 
@@ -458,7 +456,7 @@ public extension VideoPlayerView {
             alertController.preferredAction = disableAction
             disableAction.setValue(true, forKey: "checked")
         }
-        for (_, srt) in availableSubtitles.enumerated() {
+        for srt in availableSubtitles {
             let action = UIAlertAction(title: srt.name, style: .default) { [weak self] _ in
                 self?.playerLayer?.select(subtitleInfo: srt)
             }
@@ -769,22 +767,16 @@ public enum KSPlayerTopBarShowCase {
     case none
 }
 
-import KSPlayer
-
+@MainActor
 public extension KSOptions {
     /// 顶部返回、标题、AirPlay按钮 显示选项，默认.Always，可选.HorizantalOnly、.None
-    @MainActor
     static var topBarShowInCase = KSPlayerTopBarShowCase.always
     /// 自动隐藏操作栏的时间间隔 默认5秒
-    @MainActor
     static var animateDelayTimeInterval = TimeInterval(5)
     /// 开启亮度手势 默认true
-    @MainActor
     static var enableBrightnessGestures = true
     /// 开启音量手势 默认true
-    @MainActor
     static var enableVolumeGestures = true
     /// 开启进度滑动手势 默认true
-    @MainActor
     static var enablePlaytimeGestures = true
 }

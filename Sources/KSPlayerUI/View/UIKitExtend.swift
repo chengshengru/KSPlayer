@@ -222,6 +222,7 @@ extension UIApplication {
 #if !os(tvOS)
 import KSPlayer
 
+@MainActor
 public extension KSOptions {
     /**
      在AppDelegate重载这个方法就可以实现视频转屏了
@@ -229,7 +230,6 @@ public extension KSOptions {
      KSOptions.supportedInterfaceOrientations ?? .all
      }
      */
-    @MainActor
     static var supportedInterfaceOrientations: UIInterfaceOrientationMask?
 }
 #endif

@@ -15,8 +15,8 @@ public extension NSPasteboard.PasteboardType {
     static let nsFilenames = NSPasteboard.PasteboardType("NSFilenamesPboardType")
 }
 
+@MainActor
 public extension NSDraggingInfo {
-    @MainActor
     func getUrl() -> URL? {
         guard let types = draggingPasteboard.types else { return nil }
 
@@ -110,10 +110,8 @@ extension MacVideoPlayerView {
             } else if specialKey == .leftArrow {
                 slider(value: Double(toolBar.timeSlider.value) - 0.01 * totalTime, event: .touchUpInside)
             }
-        } else if let character = event.characters?.first {
-            if character == " " {
-                onButtonPressed(toolBar.playButton)
-            }
+        } else if let character = event.characters?.first, character == " " {
+            onButtonPressed(toolBar.playButton)
         }
     }
 

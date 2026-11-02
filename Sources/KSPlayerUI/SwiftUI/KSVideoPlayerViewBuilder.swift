@@ -226,8 +226,8 @@ public enum KSVideoPlayerViewBuilder {
     #endif
 }
 
+@available(iOS 14.0, macOS 11.0, tvOS 14.0, *)
 extension View {
-    @available(iOS 14.0, macOS 11.0, tvOS 14.0, *)
     func centerControlButtonStyle() -> some View {
         font(.system(.title2, design: .rounded).bold())
             .imageScale(.large)

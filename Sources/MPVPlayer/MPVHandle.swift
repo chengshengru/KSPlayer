@@ -38,7 +38,7 @@ public class MPVHandle: NSObject, @unchecked Sendable {
         setOption(name: MPVOption.GPURendererOptions.gpuApi, value: "vulkan")
         setOption(name: MPVOption.GPURendererOptions.gpuContext, value: "moltenvk")
         setOption(name: MPVOption.Video.hwdec, value: "videotoolbox")
-        if KSOptions.audioPlayerType == AudioRendererPlayer.self {
+        if options.audioOutputType == AudioRendererPlayer.self {
             setOption(name: MPVOption.Audio.ao, value: "avfoundation")
         }
         setOption(name: MPVOption.Cache.cacheSecs, value: String(Int(options.maxBufferDuration)))

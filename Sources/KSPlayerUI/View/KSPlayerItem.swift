@@ -28,14 +28,15 @@ public class KSPlayerResource: Equatable, Hashable {
     public let subtitleDataSource: SubtitleDataSource?
     public var nowPlayingInfo: KSNowPlayableMetadata?
     public let extinf: [String: String]?
-    /**
-     Player recource item with url, used to play single difinition video
-
-     - parameter name:      video name
-     - parameter url:       video url
-     - parameter cover:     video cover, will show before playing, and hide when play
-     - parameter subtitleURLs: video subtitles
-     */
+    /// Creates a player resource for a single video URL.
+    ///
+    /// - Parameters:
+    ///   - url: Video URL.
+    ///   - options: Player options.
+    ///   - name: Video name.
+    ///   - cover: Cover image displayed before playback begins.
+    ///   - subtitleURLs: Subtitle URLs.
+    ///   - extinf: Additional playlist metadata.
     @MainActor
     public convenience init(url: URL, options: KSOptions, name: String = "", cover: URL? = nil, subtitleURLs: [URL]? = nil, extinf: [String: String]? = nil) {
         let definition = KSPlayerResourceDefinition(url: url, definition: "", options: options)
@@ -49,14 +50,14 @@ public class KSPlayerResource: Equatable, Hashable {
         self.init(name: name, definitions: [definition], cover: cover, subtitleDataSource: subtitleDataSource, extinf: extinf)
     }
 
-    /**
-     Play resource with multi definitions
-
-     - parameter name:        video name
-     - parameter definitions: video definitions
-     - parameter cover:       video cover
-     - parameter subtitle:   video subtitle
-     */
+    /// Creates a player resource with multiple video definitions.
+    ///
+    /// - Parameters:
+    ///   - name: Video name.
+    ///   - definitions: Available video definitions.
+    ///   - cover: Cover image displayed before playback begins.
+    ///   - subtitleDataSource: Source of video subtitles.
+    ///   - extinf: Additional playlist metadata.
     public init(name: String, definitions: [KSPlayerResourceDefinition], cover: URL? = nil, subtitleDataSource: SubtitleDataSource? = nil, extinf: [String: String]? = nil) {
         self.name = name
         self.cover = cover

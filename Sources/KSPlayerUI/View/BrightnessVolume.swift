@@ -34,11 +34,9 @@ open class BrightnessVolume {
 
     @objc private func volumeIsChanged(notification: NSNotification) {
         guard KSOptions.enableVolumeGestures else { return }
-        if let changeReason = notification.userInfo?["AVSystemController_AudioVolumeChangeReasonNotificationParameter"] as? String, changeReason == "ExplicitVolumeChange" {
-            if let volume = notification.userInfo?["AVSystemController_AudioVolumeNotificationParameter"] as? CGFloat {
-                appearView()
-                progressView.setProgress(Float(volume), type: 1)
-            }
+        if let changeReason = notification.userInfo?["AVSystemController_AudioVolumeChangeReasonNotificationParameter"] as? String, changeReason == "ExplicitVolumeChange", let volume = notification.userInfo?["AVSystemController_AudioVolumeNotificationParameter"] as? CGFloat {
+            appearView()
+            progressView.setProgress(Float(volume), type: 1)
         }
     }
 

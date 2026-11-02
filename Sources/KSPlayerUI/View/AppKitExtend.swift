@@ -374,8 +374,8 @@ public extension NSView {
     }
 }
 
+@available(macOS 11.0, *)
 public extension NSImage {
-    @available(macOS 11.0, *)
     convenience init?(systemName: String) {
         self.init(systemSymbolName: systemName, accessibilityDescription: nil)
     }

@@ -20,20 +20,20 @@ public struct PlayerSlider: View {
     private var isFocused: Bool
     @State
     private var hoverValue: Float?
-#if DEBUG
+    #if DEBUG
     private var fileSize: Int64
     private var preLoadProtocol: PreLoadProtocol?
-#endif
+    #endif
     public init(model: ControllerTimeModel, onEditingChanged: @escaping (Bool?) -> Void = { _ in }) {
         self.init(value: Binding {
             Float(model.currentTime)
         } set: { newValue, _ in
             model.currentTime = Int(newValue)
         }, in: 0 ... Float(model.totalTime), bufferValue: Float(model.bufferTime), onEditingChanged: onEditingChanged)
-#if DEBUG
+        #if DEBUG
         fileSize = model.fileSize
         preLoadProtocol = model.preLoadProtocol
-#endif
+        #endif
     }
 
     public init(value: Binding<Float>, in bounds: ClosedRange<Float> = 0 ... 1, bufferValue: Float, onEditingChanged: @escaping (Bool?) -> Void = { _ in }) {
@@ -41,23 +41,23 @@ public struct PlayerSlider: View {
         self.bufferValue = bufferValue
         self.bounds = bounds
         self.onEditingChanged = onEditingChanged
-#if DEBUG
+        #if DEBUG
         fileSize = 1
         preLoadProtocol = nil
-#endif
+        #endif
     }
 
     public var body: some View {
-#if os(tvOS)
+        #if os(tvOS)
         ZStack {
             TVOSSlide(value: value, bounds: bounds, isFocused: _isFocused, onEditingChanged: onEditingChanged)
                 .focused($isFocused)
             ProgressTrack(value: value, bufferValue: bufferValue, bounds: bounds, progressColor: isFocused ? KSOptions.focusProgressColor : KSOptions.progressColor)
                 .allowsHitTesting(false)
         }
-#else
+        #else
         GeometryReader { geometry in
-#if DEBUG
+            #if DEBUG
             if let preLoadProtocol, fileSize > 0 {
                 ForEach(Array(preLoadProtocol.cacheList.enumerated()), id: \.offset) { _, entry in
                     Rectangle()
@@ -65,56 +65,56 @@ public struct PlayerSlider: View {
                         .offset(x: CGFloat(Double(entry.position) / Double(fileSize)) * geometry.size.width)
                         .frame(width: CGFloat(Double(entry.size) / Double(fileSize)) * geometry.size.width)
                 }
-                //                Rectangle()
-                //                    .fill(Color.green)
-                //                    .offset(x: CGFloat(Double(preLoadProtocol.logicalPos) / Double(fileSize)) * geometry.size.width)
-                //                    .frame(width: 3)
+//                Rectangle()
+//                    .fill(Color.green)
+//                    .offset(x: CGFloat(Double(preLoadProtocol.logicalPos) / Double(fileSize)) * geometry.size.width)
+//                    .frame(width: 3)
             }
-#endif
+            #endif
             // 进度部分
             ProgressTrack(value: value, bufferValue: bufferValue, bounds: bounds, progressColor: KSOptions.progressColor)
                 .frame(height: KSOptions.trackHeight)
                 .frame(height: KSOptions.interactiveSize.height)
-#if os(macOS)
-                .background {
-                    // mac上面拖动进度条时整个窗口都会被拖动，这样可以临时解决，以后有更好的方法再改下
-                    Button {} label: {
-                        Color.clear
-                    }
+            #if os(macOS)
+            .background {
+                // mac上面拖动进度条时整个窗口都会被拖动，这样可以临时解决，以后有更好的方法再改下
+                Button {} label: {
+                    Color.clear
                 }
-#else
-                .background(.white.opacity(0.001)) // 需要一个背景，不然interactiveSize的触控范围不会生效
-#endif
-                .gesture(
-                    DragGesture(minimumDistance: 0)
-                        .onChanged { gestureValue in
-                            let computedValue = valueFrom(
-                                distance: Float(gestureValue.location.x),
-                                availableDistance: Float(geometry.size.width),
-                                bounds: bounds,
-                                leadingOffset: Float(KSOptions.thumbSize.width) / 2,
-                                trailingOffset: Float(KSOptions.thumbSize.width) / 2
-                            )
-                            value.wrappedValue = computedValue
-                            if beginDrag {
-                                onEditingChanged(nil)
-                            } else {
-                                beginDrag = true
-                                onEditingChanged(true)
-                            }
+            }
+            #else
+            .background(.white.opacity(0.001)) // 需要一个背景，不然interactiveSize的触控范围不会生效
+            #endif
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { gestureValue in
+                        let computedValue = valueFrom(
+                            distance: Float(gestureValue.location.x),
+                            availableDistance: Float(geometry.size.width),
+                            bounds: bounds,
+                            leadingOffset: Float(KSOptions.thumbSize.width) / 2,
+                            trailingOffset: Float(KSOptions.thumbSize.width) / 2
+                        )
+                        value.wrappedValue = computedValue
+                        if beginDrag {
+                            onEditingChanged(nil)
+                        } else {
+                            beginDrag = true
+                            onEditingChanged(true)
                         }
-                        .onEnded { _ in
-                            beginDrag = false
-                            onEditingChanged(false)
-                        }
-                )
-                .onHoverActive { point in
-                    if let point {
-                        hoverValue = Float(point.x)
-                    } else {
-                        hoverValue = nil
                     }
+                    .onEnded { _ in
+                        beginDrag = false
+                        onEditingChanged(false)
+                    }
+            )
+            .onHoverActive { point in
+                if let point {
+                    hoverValue = Float(point.x)
+                } else {
+                    hoverValue = nil
                 }
+            }
             if let hoverValue {
                 let computedValue = valueFrom(
                     distance: Float(hoverValue),
@@ -168,7 +168,7 @@ public struct PlayerSlider: View {
                 )
         }
         .frame(height: KSOptions.interactiveSize.height)
-#endif
+        #endif
     }
 }
 
@@ -198,72 +198,63 @@ private struct ProgressTrack: View {
         GeometryReader { geometry in
             Capsule().fill(KSOptions.bufferColor).mask(maskView(geometry: geometry, value: bufferValue, offset: 0))
             Capsule().fill(progressColor)
-#if os(tvOS) // TV上面没有圆点，不需要间距
-                .mask(maskView(geometry: geometry, value: value.wrappedValue, offset: 0))
-#else
-                .mask(maskView(geometry: geometry, value: value.wrappedValue, offset: Float(KSOptions.thumbSize.width) / 2))
-#endif
+            #if os(tvOS) // TV上面没有圆点，不需要间距
+            .mask(maskView(geometry: geometry, value: value.wrappedValue, offset: 0))
+            #else
+            .mask(maskView(geometry: geometry, value: value.wrappedValue, offset: Float(KSOptions.thumbSize.width) / 2))
+            #endif
         }
         .glassBackground()
-#if os(tvOS)
+        #if os(tvOS)
         .cornerRadius(KSOptions.interactiveSize.height / 2)
-#else
+        #else
         .cornerRadius(KSOptions.trackHeight)
-#endif
+        #endif
     }
 }
 
+@available(iOS 15, macOS 12, tvOS 15, *)
 extension View {
-    @available(iOS 15, macOS 12, tvOS 15, *)
     @ViewBuilder
     func glassBackground() -> some View {
-#if os(tvOS)
+        #if os(tvOS)
         if #available(tvOS 26.0, *) {
             glassEffect(.clear)
         } else {
             background(KSOptions.trackColor)
         }
-#else
+        #else
         background(.ultraThinMaterial)
-#endif
+        #endif
     }
 }
 
+@MainActor
 public extension KSOptions {
     // MARK: PlayerSlider options
 
     /// tvos的seek是否需要确认键
-    @MainActor
     static var seekRequireConfirmation = true
     /// 圆点大小
-    @MainActor
     static var thumbSize: CGSize = .init(width: 15, height: 15)
     // 交互面积，比圆点要大一些
-#if os(tvOS)
-    @MainActor
+    #if os(tvOS)
     static var interactiveSize: CGSize = .init(width: 20, height: 20)
-#else
-    @MainActor
+    #else
     static var interactiveSize: CGSize = .init(width: 25, height: 25)
-#endif
+    #endif
     /// 轨道高度
-    @MainActor
     static var trackHeight: CGFloat = 5
 
     /// 圆点颜色
-    @MainActor
     static var thumbColor = Color.white
     /// 轨道颜色
-    @MainActor
     static var trackColor = Color.white.opacity(0.5)
     /// 播放进度颜色
-    @MainActor
     static var progressColor = Color.green.opacity(0.8)
     /// 播放进度颜色
-    @MainActor
     static var focusProgressColor = Color.red.opacity(0.9)
     /// 缓存进度颜色
-    @MainActor
     static var bufferColor = Color.white.opacity(0.9)
 }
 

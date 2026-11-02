@@ -5,6 +5,7 @@
 //  Created by kintan on 3/18/25.
 //
 
+import AVFAudio
 import Foundation
 import KSPlayer
 import SwiftUI
@@ -754,18 +755,40 @@ public struct HUDLogView: View {
     }
 }
 
+@available(macOS 12, iOS 15, tvOS 15, watchOS 8, *)
 private extension DynamicInfo {
-    @available(macOS 12, iOS 15, tvOS 15, watchOS 8, *)
     var hudLogText: String {
         var log = String(localized: "Display FPS", bundle: .module) + ": \(displayFPS)\n"
             + String(localized: "Dropped Frames", bundle: .module) + ": \(droppedVideoFrameCount)\n"
             + String(localized: "Audio Video sync", bundle: .module) + ": \(audioVideoSyncDiff)\n"
         log += String(localized: "Network Speed", bundle: .module) + ": \(networkSpeed.kmFormatted)B/s\n"
+//        #if os(iOS) || os(tvOS)
+//        if #available(iOS 17.2, tvOS 17.2, *) {
+//            log += String(localized: "Audio renderingMode", bundle: .module) + ": \(AVAudioSession.sharedInstance().renderingMode)\n"
+//        }
+//        #endif
         #if DEBUG
         log += String(localized: "Average Audio Video sync", bundle: .module) + ": \(averageAudioVideoSyncDiff)\n"
         #endif
         return log
     }
 }
+
+#if os(iOS) || os(tvOS)
+extension AVAudioSession.RenderingMode: CustomStringConvertible {
+    public var description: String {
+        switch self {
+        case .notApplicable: return "notApplicable"
+        case .monoStereo: return "monoStereo"
+        case .surround: return "surround"
+        case .spatialAudio: return "spatialAudio"
+        case .dolbyAudio: return "dolbyAudio"
+        case .dolbyAtmos: return "dolbyAtmos"
+        @unknown default:
+            return "rawValue\(rawValue)"
+        }
+    }
+}
+#endif
 
 extension CFString: @retroactive Identifiable {}

@@ -42,6 +42,7 @@ import _Concurrency
 import _StringProcessing
 import _SwiftConcurrencyShims
 import _Translation_SwiftUI
+import libdovi
 import os.lock
 import os
 import IOKit.pwr_mgt
@@ -126,7 +127,7 @@ extension KSPlayer.AVMediaSelectionTrack : KSPlayer.SubtitleInfo {
   final public var delay: Foundation.TimeInterval {
     get
   }
-  final public func search(with _: KSPlayer.KSSubtitleQuery) async -> [KSPlayer.SubtitlePart]
+  final public func search(with _: KSPlayer.KSSubtitleQuery) -> [KSPlayer.SubtitlePart]
 }
 @objc @_inheritsConvenienceInitializers @_Concurrency.MainActor @preconcurrency final public class KSAVPlayerView : KSPlayer.UIView {
   @_Concurrency.MainActor @preconcurrency final public let player: AVFoundation.AVQueuePlayer
@@ -323,6 +324,7 @@ open class KSOptions : @unchecked Swift.Sendable {
   open func process(assetTrack: some MediaPlayerTrack)
   open func makeDecode(packet: KSPlayer.Packet) -> any KSPlayer.DecodeProtocol
   open func deinterlace(assetTrack: KSPlayer.FFmpegAssetTrack)
+  open func makeReEncodeTranscode(assetTrack _: KSPlayer.FFmpegAssetTrack) -> (any KSPlayer.ReEncodeTranscodeProtocol)?
   nonisolated(unsafe) public static var useSystemHTTPProxy: Swift.Bool
   final public let useSystemHTTPProxy: Swift.Bool
   public var referer: Swift.String? {
@@ -353,6 +355,7 @@ open class KSOptions : @unchecked Swift.Sendable {
   public var maxBufferDuration: Swift.Double
   open func playable(capacitys: [any KSPlayer.CapacityProtocol], isFirst: Swift.Bool, isSeek: Swift.Bool) -> KSPlayer.LoadingState
   nonisolated(unsafe) public static var audioPlayerType: any KSPlayer.AudioOutput.Type
+  public var audioOutputType: any KSPlayer.AudioOutput.Type
   public var audioFilters: [Swift.String]
   public var syncDecodeAudio: Swift.Bool
   open func wantedAudio(tracks _: [any KSPlayer.MediaPlayerTrack]) -> (any KSPlayer.MediaPlayerTrack)?
@@ -404,7 +407,7 @@ open class KSOptions : @unchecked Swift.Sendable {
   @_Concurrency.MainActor public static var videoPlayerType: any (KSPlayer.VideoOutput & KSPlayer.UIView).Type
   nonisolated(unsafe) public static var yadifMode: Swift.Int
   nonisolated(unsafe) public static var deInterlaceAddIdet: Swift.Bool
-  final public let yadifMode: Swift.Int
+  final public let yadifMode: Swift.UInt8
   final public let deInterlaceAddIdet: Swift.Bool
   nonisolated(unsafe) public static var canStartPictureInPictureAutomaticallyFromInline: Swift.Bool
   @_Concurrency.MainActor public static var preferredFrame: Swift.Bool
@@ -444,19 +447,9 @@ open class KSOptions : @unchecked Swift.Sendable {
   public var videoSoftDecodeThreadCount: Swift.Int
   public var isDoubleRefreshRate: Swift.Bool
   public var renderUseDispatchSourceTimer: Swift.Bool
-  public var brightness: Swift.Float {
-    get
-    set
-  }
-  public var contrast: Swift.Float {
-    get
-    set
-  }
-  public var saturation: Swift.Float {
-    get
-    set
-  }
-  public var adjustBuffer: (any Metal.MTLBuffer)?
+  public var brightness: Swift.Float
+  public var contrast: Swift.Float
+  public var saturation: Swift.Float
   @_Concurrency.MainActor open func preferredFrame(fps: Swift.Float) -> Swift.Bool
   open func decodeSize(width: Swift.Int32, height: Swift.Int32) -> CoreFoundation.CGSize
   open func recreateContext(hasDecodeSuccess: Swift.Bool, isKeyFrame: Swift.Bool) -> Swift.Bool
@@ -503,11 +496,11 @@ extension KSPlayer.KSPictureInPictureProtocol {
   }
 }
 @objc @_inheritsConvenienceInitializers @available(tvOS 14.0, *)
-public class KSPictureInPictureController : AVKit.AVPictureInPictureController, KSPlayer.KSPictureInPictureProtocol {
+open class KSPictureInPictureController : AVKit.AVPictureInPictureController, KSPlayer.KSPictureInPictureProtocol {
   @available(iOS 15.0, tvOS 15.0, macOS 12.0, *)
   @objc override required dynamic public init(contentSource: AVKit.AVPictureInPictureController.ContentSource)
   public func start(layer _: KSPlayer.KSComplexPlayerLayer)
-  public func didStart(layer _: KSPlayer.KSComplexPlayerLayer)
+  open func didStart(layer _: KSPlayer.KSComplexPlayerLayer)
   public func stop(restoreUserInterface _: Swift.Bool)
   public static func play(layer _: KSPlayer.KSComplexPlayerLayer)
   @objc deinit
@@ -1455,7 +1448,7 @@ extension Swift.FixedWidthInteger {
     get
   }
 }
-extension Swift.Float {
+extension Swift.BinaryFloatingPoint {
   public var kmFormatted: Swift.String {
     get
   }
@@ -1595,6 +1588,11 @@ extension Foundation.URL : @retroactive Swift.Identifiable {
   }
   @available(iOS 8.0, tvOS 9.0, watchOS 2.0, macOS 10.10, *)
   public typealias ID = Foundation.URL
+}
+extension simd.simd_float4x4 {
+  public init(lookAt eye: Swift.SIMD3<Swift.Float>, center: Swift.SIMD3<Swift.Float>, up: Swift.SIMD3<Swift.Float>)
+  public init(perspective fovyRadians: Swift.Float, aspect: Swift.Float, nearZ: Swift.Float, farZ: Swift.Float)
+  public init(euler x: Swift.Float, y: Swift.Float, z: Swift.Float)
 }
 @objc @_hasMissingDesignatedInitializers final public class FileObject : ObjectiveC.NSObject, Swift.Identifiable, Swift.Sendable {
   final public let allValues: [Foundation.URLResourceKey : any Swift.Sendable & Swift.Codable]
@@ -1885,7 +1883,7 @@ extension Libavutil.AVPictureType : @retroactive Swift.CustomStringConvertible {
   }
 }
 extension CoreVideo.CVPixelBufferPool {
-  public static func create(width: Swift.Int32, height: Swift.Int32, bytesPerRowAlignment: Swift.Int32, pixelFormatType: Darwin.OSType, bufferCount: Swift.Int = 24) -> CoreVideo.CVPixelBufferPool?
+  public static func create(width: Swift.Int32, height: Swift.Int32, bytesPerRowAlignment: Swift.Int32, pixelFormatType: Darwin.OSType, bufferCount: Swift.Int = 8) -> CoreVideo.CVPixelBufferPool?
 }
 extension CoreAudioTypes.AudioChannelLayout : @retroactive Swift.CustomStringConvertible {
   public var description: Swift.String {
@@ -2311,13 +2309,13 @@ extension KSPlayer.FFmpegAssetTrack : KSPlayer.SubtitleInfo {
   }
 }
 extension KSPlayer.FFmpegAssetTrack : KSPlayer.KSSubtitleProtocol {
-  final public func search(with query: KSPlayer.KSSubtitleQuery) async -> [KSPlayer.SubtitlePart]
+  final public func search(with query: KSPlayer.KSSubtitleQuery) -> [KSPlayer.SubtitlePart]
 }
 extension KSPlayer.KSMEPlayer : KSPlayer.ConstantSubtitleDataSource {
   final public func infos() -> [any KSPlayer.SubtitleInfo]
 }
 extension KSPlayer.FFmpegUtility {
-  public static func write(assetTracks: [KSPlayer.FFmpegAssetTrack], to url: Swift.String, isMergeStream: Swift.Bool = false, formatContextOptions: [Swift.String : Any]? = nil, outFormat: Swift.String? = nil, allowAudioCodecs: [Libavcodec.AVCodecID]? = nil) throws -> KSPlayer.OutputStreamInfo
+  public static func write(assetTracks: [KSPlayer.FFmpegAssetTrack], to url: Swift.String, isMergeStream: Swift.Bool = false, formatContextOptions: [Swift.String : Any]? = nil, outFormat: Swift.String? = nil, allowAudioCodecs: [Libavcodec.AVCodecID]? = nil, options: KSPlayer.KSOptions? = nil) throws -> KSPlayer.OutputStreamInfo
   public static func conversion(url: Foundation.URL, options: KSPlayer.KSOptions?, outputURL: Foundation.URL, outFormat: Swift.String? = nil, initLoad: (@Sendable (Foundation.TimeInterval) -> Swift.Bool)? = nil, progress: (@Sendable (_ currentTime: Swift.Double, _ totalTime: Swift.Double) -> Swift.Bool)? = nil, completion: @escaping @Sendable (Swift.Bool) -> Swift.Void) async throws -> _Concurrency.Task<Swift.Void, Swift.Never>
   public static func conversion(url: Swift.String, options: KSPlayer.KSOptions?, outputURL: Swift.String, inFormat: Swift.String? = nil, outFormat: Swift.String? = nil, initLoad: (@Sendable (Foundation.TimeInterval) -> Swift.Bool)? = nil, progress: (@Sendable (_ currentTime: Swift.Double, _ totalTime: Swift.Double) -> Swift.Bool)? = nil, completion: @escaping @Sendable (Swift.Bool) -> Swift.Void) async throws -> _Concurrency.Task<Swift.Void, Swift.Never>
   public static func conversion(formatContext: KSPlayer.FormatContext, outputStreamInfo: KSPlayer.OutputStreamInfo, startPlayTime: inout Foundation.TimeInterval, initLoad: (@Sendable (Foundation.TimeInterval) -> Swift.Bool)? = nil, progress: (@Sendable (_ currentTime: Swift.Double, _ totalTime: Swift.Double) async -> Swift.Bool)? = nil, completion: @escaping @Sendable (Swift.Bool) -> Swift.Void) throws -> _Concurrency.Task<Swift.Void, Swift.Never>
@@ -2336,6 +2334,10 @@ public protocol TranscodeProtocol : Swift.Sendable {
   func transcode(packet: Swift.UnsafeMutablePointer<Libavcodec.AVPacket>, block: (Swift.UnsafeMutablePointer<Libavcodec.AVPacket>) -> Swift.Int32) -> Swift.Int32
   func flush(block: (Swift.UnsafeMutablePointer<Libavcodec.AVPacket>) -> Swift.Int32) -> Swift.Int32
   func stop()
+}
+public protocol ReEncodeTranscodeProtocol : KSPlayer.TranscodeProtocol {
+  var timeBase: Libavutil.AVRational { get }
+  func fill(codecpar: Swift.UnsafeMutablePointer<Libavcodec.AVCodecParameters>)
 }
 final public class FFmpegAssetTrack : KSPlayer.MediaPlayerTrack, @unchecked Swift.Sendable {
   final public var trackID: Swift.Int32 {
@@ -2374,7 +2376,9 @@ final public class FFmpegAssetTrack : KSPlayer.MediaPlayerTrack, @unchecked Swif
   final public var languageCode: Swift.String? {
     get
   }
-  final public let audioDescriptor: KSPlayer.AudioDescriptor?
+  final public var audioDescriptor: KSPlayer.AudioDescriptor? {
+    get
+  }
   final public let audioFormat: AVFAudio.AVAudioFormat?
   final public let isImageSubtitle: Swift.Bool
   final public var delay: Swift.Double
@@ -2416,7 +2420,7 @@ final public class FFmpegAssetTrack : KSPlayer.MediaPlayerTrack, @unchecked Swif
   final public func subtitleFlush()
   final public func subtitleSeek(time: Foundation.TimeInterval)
   final public func putSubtitle(packet: Swift.UnsafeMutablePointer<Libavcodec.AVPacket>)
-  final public func stop()
+  final public func stop() async
   @objc deinit
 }
 extension KSPlayer.FFmpegAssetTrack {
@@ -2676,8 +2680,8 @@ public protocol PlayerItemTrackProtocol : AnyObject, Swift.CustomStringConvertib
   var delegate: (any KSPlayer.CodecCapacityDelegate)? { get set }
   func putPacket(packet: KSPlayer.Packet)
   func seek(time: Foundation.TimeInterval, isFlush: Swift.Bool)
-  func prepare(formatContext: KSPlayer.FormatContext) throws
-  func shutdown()
+  func prepare(formatContext: KSPlayer.FormatContext, options: KSPlayer.KSOptions) throws
+  func shutdown() async
   func decode()
   func seekCache(time: Foundation.TimeInterval, needKeyFrame: Swift.Bool) -> (Swift.UInt, Foundation.TimeInterval)?
   func updateCache(headIndex: Swift.UInt, time: Foundation.TimeInterval)
@@ -2886,13 +2890,14 @@ extension CoreMedia.CMFormatDescription : KSPlayer.AudioFormatProtocol {
   final public var timestamp: Swift.Int64
   final public let fps: Swift.Float
   final public var size: Swift.Int32
-  final public var adjustBuffer: (any Metal.MTLBuffer)?
+  final public var metalRenderParams: KSPlayer.MetalRenderParams
   final public let edrMetaData: KSPlayer.EDRMetaData?
   final public let isKeyFrame: Swift.Bool
-  final public let hdrType: KSPlayer.HDRType?
-  final public var dovi: KSPlayer.DOVIDecoderConfigurationRecord?
+  final public var hdrType: KSPlayer.HDRType?
+  final public let dovi: KSPlayer.DOVIDecoderConfigurationRecord?
   final public var rpuBuffer: Foundation.Data?
   final public var extendedObject: Any?
+  final public func clone(pixelBuffer: any KSPlayer.PixelBufferProtocol) -> KSPlayer.VideoVTBFrame
   @objc deinit
 }
 public struct EDRMetaData {
@@ -2906,6 +2911,7 @@ public struct ContentLightMetadata {
 public struct AmbientViewingEnvironment {
 }
 @_hasMissingDesignatedInitializers public class AudioDescriptor : Swift.Equatable {
+  final public let audioOutputType: any KSPlayer.AudioOutput.Type
   public var sampleRate: Swift.Int32
   public var audioFormat: AVFAudio.AVAudioFormat {
     get
@@ -2971,51 +2977,6 @@ public class H264PacketReorder : KSPlayer.PacketPipeline {
   public func flush()
   @objc deinit
 }
-public enum YADIFVideoToolboxError : Swift.Error, Swift.CustomStringConvertible {
-  case functionMissing(Swift.String)
-  case commandQueueCreationFailed
-  case pipelineCreationFailed(Swift.String)
-  case incompatiblePixelBuffers
-  case commandEncoderCreationFailed
-  public var description: Swift.String {
-    get
-  }
-}
-public enum YADIFMode : Swift.Sendable {
-  case sendFrame
-  case sendField
-  case sendFrameNoSpatial
-  case sendFieldNoSpatial
-  public static func == (a: KSPlayer.YADIFMode, b: KSPlayer.YADIFMode) -> Swift.Bool
-  public func hash(into hasher: inout Swift.Hasher)
-  public var hashValue: Swift.Int {
-    get
-  }
-}
-public enum YADIFFieldOrder : Swift.Sendable {
-  case topFieldFirst
-  case bottomFieldFirst
-  public static func == (a: KSPlayer.YADIFFieldOrder, b: KSPlayer.YADIFFieldOrder) -> Swift.Bool
-  public func hash(into hasher: inout Swift.Hasher)
-  public var hashValue: Swift.Int {
-    get
-  }
-}
-public enum YADIFOutputField : Swift.Sendable {
-  case first
-  case second
-  public static func == (a: KSPlayer.YADIFOutputField, b: KSPlayer.YADIFOutputField) -> Swift.Bool
-  public func hash(into hasher: inout Swift.Hasher)
-  public var hashValue: Swift.Int {
-    get
-  }
-}
-final public class YADIFVideoToolboxDeinterlacer : KSPlayer.VTFramePipeline {
-  public init(mode: KSPlayer.YADIFMode, fieldOrder: KSPlayer.YADIFFieldOrder) throws
-  final public func filter(frame: KSPlayer.VideoVTBFrame) throws -> [KSPlayer.VideoVTBFrame]
-  final public func deinterlace(previous: CoreVideo.CVPixelBuffer, current: CoreVideo.CVPixelBuffer, next: CoreVideo.CVPixelBuffer, destination: CoreVideo.CVPixelBuffer, fieldOrder: KSPlayer.YADIFFieldOrder, outputField: KSPlayer.YADIFOutputField) throws
-  @objc deinit
-}
 open class PlaneDisplayModel : KSPlayer.DisplayEnum {
   final public let isSphere: Swift.Bool
   public init()
@@ -3029,11 +2990,14 @@ open class PlaneDisplayModel : KSPlayer.DisplayEnum {
   public static let fragmentTextureStorageMode: Metal.MTLStorageMode
   public static let mtlTextureCache: CoreVideo.CVMetalTextureCache?
   public static let library: any Metal.MTLLibrary
-  public static let leftShiftMatrixBuffer: (any Metal.MTLBuffer)?
-  public static let leftShiftSixMatrixBuffer: (any Metal.MTLBuffer)?
   public static func setFragmentBuffer(encoder: any Metal.MTLRenderCommandEncoder, pixelBuffer: any KSPlayer.PixelBufferProtocol)
   public static func makePipelineState(fragmentFunction: Swift.String, isSphere: Swift.Bool = false, bitDepth: Swift.Int32 = 8) -> any Metal.MTLRenderPipelineState
+  public static func texture(pixelBuffer: CoreVideo.CVPixelBuffer) -> [any Metal.MTLTexture]
+  public static func texture(pixelBuffer: CoreVideo.CVPixelBuffer, formats: [Metal.MTLPixelFormat]) -> [any Metal.MTLTexture]
   @objc deinit
+}
+public struct MetalRenderParams {
+  public mutating func adjust(brightness: Swift.Float, contrast: Swift.Float, saturation: Swift.Float)
 }
 extension Metal.MTLRenderCommandEncoder {
   public func draw(frame: KSPlayer.VideoVTBFrame, display: any KSPlayer.DisplayEnum)
@@ -3061,6 +3025,35 @@ extension RealityFoundation.TextureResource.DrawableQueue : KSPlayer.Drawable {
 }
 extension Metal.MTLLibrary {
   public func makePipelineState(vertexFunction: Swift.String, fragmentFunction: Swift.String, bitDepth: Swift.Int32 = 8) -> any Metal.MTLRenderPipelineState
+}
+public enum MetalError : Swift.Error, Swift.CustomStringConvertible {
+  case functionMissing(Swift.String)
+  case commandQueueCreationFailed
+  case pipelineCreationFailed(Swift.String)
+  case incompatiblePixelBuffers
+  case commandEncoderCreationFailed
+  public var description: Swift.String {
+    get
+  }
+}
+public protocol MetalDrawable {
+  @_Concurrency.MainActor func update(metalLayer: QuartzCore.CAMetalLayer)
+  @_Concurrency.MainActor func draw(encoder: any Metal.MTLRenderCommandEncoder, drawableSize: CoreFoundation.CGSize)
+}
+@objc @_hasMissingDesignatedInitializers @_Concurrency.MainActor @preconcurrency public class MetalSubtitleView : MetalKit.MTKView {
+  @_Concurrency.MainActor @preconcurrency public var metalDrawable: (any KSPlayer.MetalDrawable)? {
+    get
+    set
+  }
+  @_Concurrency.MainActor @preconcurrency public var dynamicRange: KSPlayer.DynamicRange {
+    get
+    set
+  }
+  @objc deinit
+}
+extension KSPlayer.MetalSubtitleView : MetalKit.MTKViewDelegate {
+  @_Concurrency.MainActor @preconcurrency @objc dynamic public func mtkView(_: MetalKit.MTKView, drawableSizeWillChange size: CoreFoundation.CGSize)
+  @_Concurrency.MainActor @objc dynamic public func draw(in view: MetalKit.MTKView)
 }
 public protocol PixelBufferProtocol : AnyObject {
   var width: Swift.Int { get }
@@ -3170,10 +3163,40 @@ extension CoreVideo.CVBuffer : KSPlayer.PixelBufferProtocol {
   override public func set(frame: KSPlayer.VideoVTBFrame, encoder: any Metal.MTLRenderCommandEncoder)
   @objc deinit
 }
-extension simd.simd_float4x4 {
-  public init(lookAt eye: Swift.SIMD3<Swift.Float>, center: Swift.SIMD3<Swift.Float>, up: Swift.SIMD3<Swift.Float>)
-  public init(perspective fovyRadians: Swift.Float, aspect: Swift.Float, nearZ: Swift.Float, farZ: Swift.Float)
-  public init(euler x: Swift.Float, y: Swift.Float, z: Swift.Float)
+public enum YADIFMode : Swift.UInt8 {
+  case sendFrame, sendField, sendFrameNoSpatial, sendFieldNoSpatial
+  public init?(rawValue: Swift.UInt8)
+  public typealias RawValue = Swift.UInt8
+  public var rawValue: Swift.UInt8 {
+    get
+  }
+}
+public enum YADIFFieldOrder : Swift.Sendable {
+  case topFieldFirst
+  case bottomFieldFirst
+  public static func == (a: KSPlayer.YADIFFieldOrder, b: KSPlayer.YADIFFieldOrder) -> Swift.Bool
+  public func hash(into hasher: inout Swift.Hasher)
+  public var hashValue: Swift.Int {
+    get
+  }
+}
+public enum YADIFOutputField : Swift.Sendable {
+  case first
+  case second
+  public static func == (a: KSPlayer.YADIFOutputField, b: KSPlayer.YADIFOutputField) -> Swift.Bool
+  public func hash(into hasher: inout Swift.Hasher)
+  public var hashValue: Swift.Int {
+    get
+  }
+}
+final public class YADIFVideoToolboxDeinterlacer : KSPlayer.VTFramePipeline {
+  public init(mode: KSPlayer.YADIFMode, fieldOrder: KSPlayer.YADIFFieldOrder) throws
+  final public func filter(frame: KSPlayer.VideoVTBFrame) throws -> [KSPlayer.VideoVTBFrame]
+  final public func deinterlace(previous: CoreVideo.CVPixelBuffer, current: CoreVideo.CVPixelBuffer, next: CoreVideo.CVPixelBuffer, destination: CoreVideo.CVPixelBuffer, fieldOrder: KSPlayer.YADIFFieldOrder, outputField: KSPlayer.YADIFOutputField) throws
+  @objc deinit
+}
+extension Metal.MTLComputeCommandEncoder {
+  public func dispatch(pipeline: any Metal.MTLComputePipelineState, width: Swift.Int, height: Swift.Int)
 }
 @available(iOS 16.0, tvOS 16.0, visionOS 1.0, macOS 13.0, macCatalyst 16.0, *)
 extension Accelerate.vImage.PixelBuffer where Format == Accelerate.vImage.Interleaved8x4 {
@@ -3194,17 +3217,12 @@ extension Accelerate.vImage.PixelBuffer where Format == Accelerate.vImage.Interl
   final public func parse(url _: Foundation.URL, scanner: Foundation.Scanner) throws -> any KSPlayer.KSSubtitleProtocol
   @objc deinit
 }
-final public actor AssIncrementImageRenderer : KSPlayer.KSSubtitleProtocol {
-  public init(content: Swift.String)
+final public class AssIncrementImageRenderer : KSPlayer.KSSubtitleProtocol {
   public init(fontsDir: Swift.String?, header: Swift.String)
   final public func add(subtitle: Swift.String, start: Swift.Int64, duration: Swift.Int64)
   final public func flush()
   final public func search(with query: KSPlayer.KSSubtitleQuery) -> [KSPlayer.SubtitlePart]
   @objc deinit
-  @available(iOS 13.0, tvOS 13.0, watchOS 6.0, macOS 10.15, *)
-  @_semantics("defaultActor") nonisolated final public var unownedExecutor: _Concurrency.UnownedSerialExecutor {
-    get
-  }
 }
 @_hasMissingDesignatedInitializers public class AssParse : KSPlayer.KSParseProtocol {
   public func canParse(scanner: Foundation.Scanner) -> Swift.Bool
@@ -3216,15 +3234,11 @@ extension Swift.Dictionary where Key == Swift.String {
 }
 public struct ASSStyle {
 }
-@_hasMissingDesignatedInitializers public actor FFmpegSubtitle {
+@_hasMissingDesignatedInitializers public class FFmpegSubtitle {
   @objc deinit
-  @available(iOS 13.0, tvOS 13.0, watchOS 6.0, macOS 10.15, *)
-  @_semantics("defaultActor") nonisolated final public var unownedExecutor: _Concurrency.UnownedSerialExecutor {
-    get
-  }
 }
 extension KSPlayer.FFmpegSubtitle : KSPlayer.KSSubtitleProtocol {
-  public func search(with query: KSPlayer.KSSubtitleQuery) async -> [KSPlayer.SubtitlePart]
+  public func search(with query: KSPlayer.KSSubtitleQuery) -> [KSPlayer.SubtitlePart]
 }
 public protocol KSParseProtocol {
   func canParse(scanner: Foundation.Scanner) -> Swift.Bool
@@ -3258,7 +3272,7 @@ public struct KSSubtitleQuery : Swift.Sendable {
   public let marginV: Swift.Int32?
 }
 public protocol KSSubtitleProtocol {
-  func search(with query: KSPlayer.KSSubtitleQuery) async -> [KSPlayer.SubtitlePart]
+  func search(with query: KSPlayer.KSSubtitleQuery) -> [KSPlayer.SubtitlePart]
 }
 public protocol SubtitleInfo : AnyObject, KSPlayer.KSSubtitleProtocol, Swift.Sendable {
   var subtitleID: Swift.String { get }
@@ -3309,12 +3323,12 @@ final public class URLSubtitleInfo : KSPlayer.SubtitleInfo, Swift.Codable, @unch
   final public var isSrt: Swift.Bool {
     get
   }
-  final public func search(with query: KSPlayer.KSSubtitleQuery) async -> [KSPlayer.SubtitlePart]
+  final public func search(with query: KSPlayer.KSSubtitleQuery) -> [KSPlayer.SubtitlePart]
   @objc deinit
   final public func encode(to encoder: any Swift.Encoder) throws
   public init(from decoder: any Swift.Decoder) throws
 }
-@_hasMissingDesignatedInitializers final public class PointerImagePipeline {
+final public class PointerImagePipeline {
   public init(rgbData: Swift.UnsafeMutablePointer<Swift.UInt8>, stride: Swift.Int, width: Swift.Int, height: Swift.Int, alphaInfo: CoreGraphics.CGImageAlphaInfo)
   public init(width: Swift.Int, height: Swift.Int, stride: Swift.Int, bitmap: Swift.UnsafeMutablePointer<Swift.UInt8>, palette: Swift.UnsafePointer<Swift.UInt32>)
   final public func cgImage() -> CoreGraphics.CGImage?
@@ -3356,17 +3370,17 @@ final public class DirectorySubtitleDataSource : KSPlayer.URLSubtitleDataSource,
   final public func searchSubtitle(fileURL: Foundation.URL) async throws -> [KSPlayer.URLSubtitleInfo]
   @objc deinit
 }
-final public class ShooterSubtitleDataSource : KSPlayer.URLSubtitleDataSource, @unchecked Swift.Sendable {
+@_hasMissingDesignatedInitializers final public class ShooterSubtitleDataSource : KSPlayer.URLSubtitleDataSource, @unchecked Swift.Sendable {
   public init()
   final public func searchSubtitle(fileURL: Foundation.URL) async throws -> [KSPlayer.URLSubtitleInfo]
   @objc deinit
 }
-final public class AssrtSubtitleDataSource : KSPlayer.SearchSubtitleDataSource {
+@_hasMissingDesignatedInitializers final public class AssrtSubtitleDataSource : KSPlayer.SearchSubtitleDataSource {
   public init(token: Swift.String)
   final public func searchSubtitle(query: Swift.String, languages _: [Swift.String]) async throws -> [KSPlayer.URLSubtitleInfo]
   @objc deinit
 }
-final public class OpenSubtitleDataSource : KSPlayer.SearchSubtitleDataSource, @unchecked Swift.Sendable {
+@_hasMissingDesignatedInitializers final public class OpenSubtitleDataSource : KSPlayer.SearchSubtitleDataSource, @unchecked Swift.Sendable {
   public init(apiKey: Swift.String)
   final public func login(username: Swift.String, password: Swift.String) async throws
   final public func searchSubtitle(query: Swift.String, languages: [Swift.String]) async throws -> [KSPlayer.URLSubtitleInfo]
@@ -3436,7 +3450,7 @@ open class SubtitleModel : Combine.ObservableObject, @unchecked Swift.Sendable {
   @objc deinit
 }
 extension SwiftUICore.View {
-  @_Concurrency.MainActor @preconcurrency package func translationView(subtitleModel: KSPlayer.SubtitleModel?) -> some SwiftUICore.View
+  @_Concurrency.MainActor @preconcurrency public func translationView(subtitleModel: KSPlayer.SubtitleModel?) -> some SwiftUICore.View
   
 }
 extension Foundation.NSAttributedString : @unchecked @retroactive Swift.Sendable {
@@ -3468,6 +3482,7 @@ public struct SubtitleTextInfo : Swift.Sendable, Swift.Equatable, Swift.Identifi
     get
   }
   public let displaySize: CoreFoundation.CGSize?
+  public init(text: Foundation.NSAttributedString, position: KSPlayer.TextPosition? = nil, displaySize: CoreFoundation.CGSize? = nil)
   public var id: Swift.Int {
     get
   }
@@ -3528,25 +3543,6 @@ extension KSPlayer.Either : Swift.Identifiable where Left == KSPlayer.SubtitleIm
   }
   public typealias ID = Swift.Int
 }
-public protocol MetalDrawable {
-  @_Concurrency.MainActor func update(metalLayer: QuartzCore.CAMetalLayer)
-  @_Concurrency.MainActor func draw(encoder: any Metal.MTLRenderCommandEncoder, drawableSize: CoreFoundation.CGSize)
-}
-@objc @_hasMissingDesignatedInitializers @_Concurrency.MainActor @preconcurrency public class MetalSubtitleView : MetalKit.MTKView {
-  @_Concurrency.MainActor @preconcurrency public var metalDrawable: (any KSPlayer.MetalDrawable)? {
-    get
-    set
-  }
-  @_Concurrency.MainActor @preconcurrency public var dynamicRange: KSPlayer.DynamicRange {
-    get
-    set
-  }
-  @objc deinit
-}
-extension KSPlayer.MetalSubtitleView : MetalKit.MTKViewDelegate {
-  @_Concurrency.MainActor @preconcurrency @objc dynamic public func mtkView(_: MetalKit.MTKView, drawableSizeWillChange size: CoreFoundation.CGSize)
-  @_Concurrency.MainActor @objc dynamic public func draw(in view: MetalKit.MTKView)
-}
 extension KSPlayer.KSPlayerState : Swift.Equatable {}
 extension KSPlayer.KSPlayerState : Swift.Hashable {}
 extension KSPlayer.KSPlayerLayer : Swift.Sendable {}
@@ -3592,6 +3588,7 @@ extension KSPlayer.AV1OBUType : Swift.Hashable {}
 extension KSPlayer.AV1OBUType : Swift.RawRepresentable {}
 extension KSPlayer.YADIFMode : Swift.Equatable {}
 extension KSPlayer.YADIFMode : Swift.Hashable {}
+extension KSPlayer.YADIFMode : Swift.RawRepresentable {}
 extension KSPlayer.YADIFFieldOrder : Swift.Equatable {}
 extension KSPlayer.YADIFFieldOrder : Swift.Hashable {}
 extension KSPlayer.YADIFOutputField : Swift.Equatable {}

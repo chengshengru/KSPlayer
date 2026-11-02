@@ -39,7 +39,7 @@ Differences between GPL version and LGPL version.
 - Audio Passthrough Output by Wi-Fi
 - Live streaming supports rewind viewing
 - Offline AI real-time subtitle generation
-- Native Dolby Vision dynamic metadata (P5, P7， P8)
+- Native Dolby Vision dynamic metadata (P5、P7、P8、P10)
 - Simultaneous playback of separate audio and video URLs
 - Blu-ray disc (ISO, BDMV, DVD) playback on all Apple platforms
 - Play videos in a small window in the App (resumable, supports iOS and tvOS)
