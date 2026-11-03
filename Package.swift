@@ -103,37 +103,21 @@ let package = Package(
     // 移除后两代工具链统一以 Swift 5 language mode 编译(现状默认即 v5,行为零差异)
 )
 
-var ffmpegKitPath = FileManager.default.currentDirectoryPath + "/../FFmpegKit"
-// spm FileManager.default.currentDirectoryPath返回的空字符，spm6.0#file返回的不是当前的目录。要改成用#filePath
-if !FileManager.default.fileExists(atPath: ffmpegKitPath), let url = URL(string: #filePath) {
-    let path = url.deletingLastPathComponent().path
-    // 解决用xcode引入spm的时候，依赖关系出错的问题
-    if !path.contains("/checkouts/") {
-        ffmpegKitPath = path + "/../FFmpegKit"
-    }
-}
-
-// Xcode 14.2(Swift 5.7)兼容:当 KSPlayer 被 Xcode 以 file:// 方式克隆到
-// SourcePackages/checkouts 后,同级目录不存在 FFmpegKit,会走下面的回退分支。
-// 远端 GitHub 的 FFmpegKit 9.0.2 是 6.1 manifest,5.7 工具链无法解析,
-// 因此优先回退到本地 FFmpegKit 仓库(main 分支已提交 5.7 降级)。
-var localFFmpegKit = "/Users/chengshengru/Workspace/github/FFmpegKit"
-if !FileManager.default.fileExists(atPath: localFFmpegKit + "/Package.swift"),
-   let url = URL(string: #filePath) {
-    // 兜底:尝试相对本仓库的 ../FFmpegKit(应对换机器/换目录的场景)
-    localFFmpegKit = url.deletingLastPathComponent().path + "/../FFmpegKit"
-}
-
-if FileManager.default.fileExists(atPath: ffmpegKitPath + "/Package.swift") {
+// FFmpegKit 仅为 xcframework 二进制包,按分支引用;由引用方(如 App 工程)的 Package.resolved 锁定 revision。
+// 说明:此处不再嗅探 cwd / 兄弟目录 / 硬编码本机绝对路径——那会导致
+// ① 远端引用时静默解析到本机工作树(未提交改动混入构建);② 换机/CI 回退到
+// kingslay/FFmpegKit 9.0.2(6.1 manifest),Xcode 14.2 在解析阶段直接失败。
+// 本地联调(需要改 FFmpegKit 源码或离线)用环境变量显式覆盖:
+//   export KSPLAYER_FFMPEGKIT_PATH=/path/to/FFmpegKit
+let ffmpegKitURL = "https://github.com/chengshengru/FFmpegKit.git"
+let ffmpegKitBranch = "main"
+if let localPath = ProcessInfo.processInfo.environment["KSPLAYER_FFMPEGKIT_PATH"],
+   FileManager.default.fileExists(atPath: localPath + "/Package.swift") {
     package.dependencies += [
-        .package(path: ffmpegKitPath),
-    ]
-} else if FileManager.default.fileExists(atPath: localFFmpegKit + "/Package.swift") {
-    package.dependencies += [
-        .package(url: "file://" + localFFmpegKit, branch: "main"),
+        .package(path: localPath),
     ]
 } else {
     package.dependencies += [
-        .package(url: "https://github.com/kingslay/FFmpegKit.git", from: "9.0.2"),
+        .package(url: ffmpegKitURL, branch: ffmpegKitBranch),
     ]
 }
